@@ -1507,7 +1507,7 @@
       currentOrg = data.org;
       
       document.getElementById('org-detail-name').textContent = currentOrg.name;
-      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
+      document.getElementById('org-detail-slug').textContent = `commex.anipub.xyz/embed/${currentOrg.slug}`;
       
       showDashSection('org-detail');
       showOrgTab('embed');
@@ -1619,7 +1619,7 @@
       });
       currentOrg = data.org;
       // Update slug in URL if name changed
-      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
+      document.getElementById('org-detail-slug').textContent = `commex.anipub.xyz/embed/${currentOrg.slug}`;
       document.getElementById('org-detail-name').textContent = currentOrg.name;
       await loadDashboard();
       toast('Settings saved', 'success');
