@@ -44,7 +44,7 @@ Commex is a **Disqus alternative** where each organization stores its own commen
 ### 1. Clone & install
 
 ```bash
-git clone https://github.com/Commex/commex.git
+git clone https://github.com/OpenCommex/commex.git
 cd commex
 npm install
 ```
