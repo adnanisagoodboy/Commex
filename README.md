@@ -2,6 +2,8 @@
 
 Welcome to Commex, the modern, self-hosted embeddable commenting platform where you own your data. This guide covers everything you need to get up and running—from local development to production deployment.
 
+**Firstly You can just create an Account in https://commex.anipub.xyz and create a org there ... get the embed code code and past it whereever you want in your website**
+
 ---
 
 ## Table of Contents
