@@ -1,0 +1,1787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Commex — The Modern Comment Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #050505;
+      --surface: #0d0d0d;
+      --surface2: #111111;
+      --surface3: #1a1a1a;
+      --border: #1e1e1e;
+      --border2: #2a2a2a;
+      --text: #e4e4e7;
+      --text-muted: #71717a;
+      --text-dim: #52525b;
+      --accent: #7c3aed;
+      --accent2: #a78bfa;
+      --accent-glow: #7c3aed33;
+      --green: #4ade80;
+      --red: #ef4444;
+      --yellow: #fbbf24;
+      --font-display: 'Syne', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+    
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /*  Layout  */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /*  Navbar  */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      height: 60px;
+      background: rgba(5,5,5,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-brand {
+      font-family: var(--font-display);
+      font-weight: 800;
+      font-size: 20px;
+      letter-spacing: -0.03em;
+      color: var(--text);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-brand-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+    .nav-links { display: flex; align-items: center; gap: 8px; }
+    .nav-btn {
+      padding: 8px 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+    .nav-btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid transparent;
+    }
+    .nav-btn-ghost:hover { color: var(--text); background: var(--surface2); }
+    .nav-btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .nav-btn-primary:hover { filter: brightness(1.15); }
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .nav-avatar {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: var(--accent-glow);
+      border: 2px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent2);
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .nav-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .nav-username {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    /*  Hero  */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 80px 24px 40px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse 60% 40% at 50% 0%, #7c3aed18 0%, transparent 60%),
+        radial-gradient(ellipse 40% 30% at 80% 60%, #a78bfa0a 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 60px 60px;
+      opacity: 0.3;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent);
+      pointer-events: none;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--accent-glow);
+      border: 1px solid #7c3aed44;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--accent2);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeUp 0.6s ease both;
+    }
+    .hero-title {
+      font-family: var(--font-display);
+      font-size: clamp(42px, 8vw, 88px);
+      font-weight: 800;
+      line-height: 1.0;
+      letter-spacing: -0.04em;
+      color: var(--text);
+      margin-bottom: 20px;
+      animation: fadeUp 0.6s ease 0.1s both;
+    }
+    .hero-title-accent { color: var(--accent2); }
+    .hero-sub {
+      font-size: clamp(16px, 2vw, 20px);
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      animation: fadeUp 0.6s ease 0.2s both;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      animation: fadeUp 0.6s ease 0.3s both;
+    }
+    .hero-btn {
+      padding: 14px 28px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .hero-btn-primary {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+    .hero-btn-primary:hover { filter: brightness(1.15); transform: translateY(-1px); }
+    .hero-btn-outline {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border2);
+    }
+    .hero-btn-outline:hover { background: var(--surface2); border-color: var(--border2); }
+    .hero-embed-preview {
+      margin-top: 60px;
+      width: 100%;
+      max-width: 680px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      animation: fadeUp 0.6s ease 0.4s both;
+    }
+    .hero-embed-bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 16px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .hero-embed-code {
+      padding: 20px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      color: #a78bfa;
+      text-align: left;
+      line-height: 1.8;
+    }
+    .ec-tag { color: #67e8f9; }
+    .ec-attr { color: #fbbf24; }
+    .ec-val { color: #4ade80; }
+    .ec-comment { color: #3f3f46; }
+
+    /*  Features  */
+    .features {
+      padding: 100px 24px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .section-label {
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--accent2);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      text-align: center;
+      font-family: var(--font-display);
+      font-size: clamp(28px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      margin-bottom: 60px;
+      color: var(--text);
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .feature-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px;
+      transition: all 0.2s;
+    }
+    .feature-card:hover {
+      border-color: var(--border2);
+      background: var(--surface2);
+      transform: translateY(-2px);
+    }
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+      display: block;
+    }
+    .feature-name {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .feature-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    /*  Dashboard  */
+    .dashboard {
+      padding-top: 60px;
+      min-height: 100vh;
+      display: flex;
+    }
+    .sidebar {
+      width: 240px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: calc(100vh - 60px);
+      position: sticky;
+      top: 60px;
+      height: calc(100vh - 60px);
+      overflow-y: auto;
+    }
+    .sidebar-section {
+      padding: 20px 16px 8px;
+    }
+    .sidebar-section-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      padding: 0 8px;
+      margin-bottom: 4px;
+    }
+    .sidebar-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 500;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+      font-family: var(--font-body);
+    }
+    .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+    .sidebar-item.active { background: var(--accent-glow); color: var(--accent2); }
+    .sidebar-item-icon { font-size: 15px; }
+    .sidebar-org {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.15s;
+      border: none;
+      background: none;
+      width: 100%;
+      text-align: left;
+    }
+    .sidebar-org:hover { background: var(--surface2); }
+    .sidebar-org-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .sidebar-org-name { font-size: 13px; color: var(--text-muted); font-weight: 500; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .main-content {
+      flex: 1;
+      overflow: hidden;
+    }
+    .content-area {
+      padding: 32px;
+      max-width: 1000px;
+    }
+    .content-area.hidden { display: none; }
+
+    /*  Cards  */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .card-body { padding: 24px; }
+
+    /*  Stats  */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .stat-label { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; font-weight: 500; }
+    .stat-value { font-family: var(--font-display); font-size: 28px; font-weight: 700; color: var(--text); }
+    .stat-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+
+    /*  Forms  */
+    .form-group { margin-bottom: 20px; }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+    }
+    .form-label-hint {
+      font-size: 11px;
+      color: var(--text-dim);
+      margin-left: 6px;
+    }
+    .form-input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-input:focus { border-color: var(--accent); }
+    .form-input::placeholder { color: var(--text-dim); }
+    .form-input.mono { font-family: var(--font-mono); font-size: 12px; }
+    .form-hint { font-size: 11px; color: var(--text-dim); margin-top: 6px; }
+    .form-error { font-size: 11px; color: var(--red); margin-top: 6px; }
+    textarea.form-input { resize: vertical; min-height: 80px; line-height: 1.6; }
+
+    /*  Buttons  */
+    .btn {
+      padding: 10px 20px;
+      border-radius: 9px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover:not(:disabled) { filter: brightness(1.1); }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border2); }
+    .btn-ghost:hover:not(:disabled) { background: var(--surface2); color: var(--text); }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid #ef444433; }
+    .btn-danger:hover:not(:disabled) { background: #ef444411; }
+    .btn-sm { padding: 7px 14px; font-size: 12px; border-radius: 7px; }
+    .btn-icon {
+      width: 32px; height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: transparent;
+      border: 1px solid var(--border2);
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+    }
+    .btn-icon:hover { background: var(--surface2); color: var(--text); }
+
+    /*  Table  */
+    .table { width: 100%; border-collapse: collapse; }
+    .table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .table td {
+      padding: 12px 16px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: var(--surface2); }
+
+    /*  Badges  */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .badge-green { background: #4ade8022; color: var(--green); }
+    .badge-red { background: #ef444422; color: var(--red); }
+    .badge-yellow { background: #fbbf2422; color: var(--yellow); }
+    .badge-purple { background: var(--accent-glow); color: var(--accent2); }
+
+    /*  Snippet box  */
+    .snippet-box {
+      background: #050505;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #a78bfa;
+      position: relative;
+      line-height: 1.8;
+      overflow-x: auto;
+    }
+    .snippet-copy {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+    .snippet-tag { color: #67e8f9; }
+    .snippet-attr { color: #fbbf24; }
+    .snippet-val { color: #4ade80; }
+
+    /*  Org card  */
+    .org-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+    }
+    .org-card:hover { border-color: var(--border2); background: var(--surface2); transform: translateY(-1px); }
+    .org-logo {
+      width: 44px; height: 44px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 800;
+      color: white;
+      font-family: var(--font-display);
+    }
+    .org-info { flex: 1; }
+    .org-name { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .org-slug { font-size: 11px; color: var(--text-dim); font-family: var(--font-mono); }
+    .org-status { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+    .org-status-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+    /*  Modals  */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 200;
+      backdrop-filter: blur(4px);
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      animation: modalIn 0.2s ease;
+    }
+    @keyframes modalIn { from { transform: scale(0.97) translateY(8px); opacity: 0; } to { transform: none; opacity: 1; } }
+    .modal-header {
+      padding: 24px 24px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-title { font-family: var(--font-display); font-size: 20px; font-weight: 700; }
+    .modal-close {
+      width: 30px; height: 30px;
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+      transition: all 0.15s;
+    }
+    .modal-close:hover { background: var(--surface2); color: var(--text); }
+    .modal-body { padding: 24px; }
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    /*  Auth screen  */
+    .auth-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: var(--bg);
+    }
+    .auth-card {
+      width: 100%;
+      max-width: 400px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 36px;
+    }
+    .auth-logo {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .auth-logo-dot { color: var(--accent2); }
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-tab {
+      background: none;
+      border: none;
+      color: var(--text-dim);
+      font-family: var(--font-body);
+      font-size: 14px;
+      font-weight: 500;
+      padding: 10px 16px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
+      transition: all 0.15s;
+    }
+    .auth-tab.active { color: var(--accent2); border-bottom-color: var(--accent); }
+
+    /*  Toggle switch  */
+    .toggle-group {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .toggle-group:last-child { border-bottom: none; }
+    .toggle-label { font-size: 13px; color: var(--text-muted); }
+    .toggle-sub { font-size: 11px; color: var(--text-dim); margin-top: 2px; }
+    .toggle {
+      position: relative;
+      width: 38px; height: 20px;
+      flex-shrink: 0;
+    }
+    .toggle input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider {
+      position: absolute;
+      inset: 0;
+      background: var(--border2);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 14px; height: 14px;
+      left: 3px; top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle input:checked + .toggle-slider { background: var(--accent); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+
+    /*  Toast  */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      color: var(--text);
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 13px;
+      animation: slideUp 0.2s ease;
+      max-width: 300px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.error { border-color: #ef444455; }
+    .toast.success { border-color: #4ade8055; }
+    @keyframes slideUp { from { transform: translateY(10px); opacity: 0; } to { transform: none; opacity: 1; } }
+    @keyframes fadeUp { from { transform: translateY(20px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /*  Page header  */
+    .page-header {
+      padding: 32px 32px 0;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .page-sub { font-size: 13px; color: var(--text-dim); margin-top: 4px; }
+
+    /*  Responsive  */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .navbar { padding: 0 16px; }
+      .content-area { padding: 20px 16px; }
+      .page-header { padding: 20px 16px 0; }
+    }
+
+    /*  Scrollbar  */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3a3a3a; }
+
+    .color-swatch {
+      width: 28px; height: 28px;
+      border-radius: 6px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .color-swatch.selected { border-color: white; transform: scale(1.1); }
+
+    .empty-state {
+      padding: 48px;
+      text-align: center;
+      color: var(--text-dim);
+    }
+    .empty-icon { font-size: 36px; margin-bottom: 12px; }
+    .empty-title { font-size: 15px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+    .empty-sub { font-size: 13px; line-height: 1.6; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+  <div class="nav-brand" onclick="showPage('home')">
+    <div class="nav-brand-dot" style="display: flex;align-items: center; justify-content: center;"></div>
+    <img style="    width: 70px;
+    filter: brightness(10);
+    object-fit: cover;
+    height: 50px;
+    margin-top: -9px;
+    " src="./image/vIAm3.jpg" alt="">
+  </div>
+  <div class="nav-links" id="nav-links">
+    <button class="nav-btn nav-btn-ghost" onclick="showPage('home')">Home</button>
+    <button class="nav-btn nav-btn-ghost" onclick="scrollToFeatures()">Features</button>
+    <button class="nav-btn nav-btn-ghost" onclick="showAuthPage('login')" id="nav-login">Sign in</button>
+    <button class="nav-btn nav-btn-primary" onclick="showAuthPage('register')" id="nav-register">Get started</button>
+    <div class="nav-user" id="nav-user" style="display:none">
+      <div class="nav-avatar" id="nav-avatar" onclick="showPage('dashboard')"></div>
+      <span class="nav-username" id="nav-username"></span>
+      <button class="nav-btn nav-btn-ghost" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
+<!--  PAGE: HOME ─ -->
+<div class="page active" id="page-home">
+  <section class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div style="position:relative;z-index:1;width:100%;max-width:900px; display: flex;flex-direction: column;align-items: center;">
+      <div class="hero-badge">✦ Open comment platform</div>
+      <h1 class="hero-title">
+        Comments that<br>
+        <span class="hero-title-accent">belong to you</span>
+      </h1>
+      <p class="hero-sub">
+        Commex is an embeddable comment and reaction platform where you own the data.
+        Connect your own MongoDB database and embed stunning comment boxes on any website.
+      </p>
+      <div class="hero-actions">
+        <button class="hero-btn hero-btn-primary" onclick="showAuthPage('register')">
+          Start for free
+        </button>
+        <button class="hero-btn hero-btn-outline" onclick="scrollToFeatures()">
+          See features
+        </button>
+      </div>
+      <div class="hero-embed-preview">
+        <div class="hero-embed-bar">
+          <div class="hero-dot" style="background:#ef4444"></div>
+          <div class="hero-dot" style="background:#fbbf24"></div>
+          <div class="hero-dot" style="background:#4ade80"></div>
+          <span style="font-family:var(--font-mono);font-size:12px;color:var(--text-dim);margin-left:8px">your-website.com/blog/post</span>
+        </div>
+        <div class="hero-embed-code">
+          <span class="ec-comment">&lt;!-- Commex — 2 lines to add comments --&gt;</span><br>
+          <span class="ec-tag">&lt;div</span> <span class="ec-attr">id</span>=<span class="ec-val">"commex-widget"</span><span class="ec-tag">&gt;&lt;/div&gt;</span><br>
+          <span class="ec-tag">&lt;script&gt;</span><br>
+          &nbsp;&nbsp;window.CommexConfig = {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ec-attr">orgSlug</span>: <span class="ec-val">"my-org"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ec-attr">pageUrl</span>: <span class="ec-val">window.location.href</span><br>
+          &nbsp;&nbsp;};<br>
+          <span class="ec-tag">&lt;/script&gt;</span><br>
+          <span class="ec-tag">&lt;script</span> <span class="ec-attr">src</span>=<span class="ec-val">"commex.app/embed/commex.js"</span> <span class="ec-attr">async</span><span class="ec-tag">&gt;&lt;/script&gt;</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="features" id="features-section">
+    <div class="section-label">// capabilities</div>
+    <h2 class="section-title">Everything you need</h2>
+    <div class="features-grid">
+      <div class="feature-card">
+        <span class="feature-icon">🗄️</span>
+        <div class="feature-name">Your database, your data</div>
+        <div class="feature-desc">Each organization connects to its own MongoDB instance. Your comments never mix with others and you control retention.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">⚡</span>
+        <div class="feature-name">Two-line embed</div>
+        <div class="feature-desc">Add a &lt;div&gt; and a &lt;script&gt; tag. Commex does the rest — auto-detects your page, loads comments instantly.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎭</span>
+        <div class="feature-name">Rich reactions</div>
+        <div class="feature-desc">10 built-in emoji reactions plus custom org-specific ones. Upvoting, downvoting, and per-page reactions too.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🧵</span>
+        <div class="feature-name">Threaded replies</div>
+        <div class="feature-desc">Full nested comment threads with @mentions, notifications, and smart depth limiting to keep conversations readable.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎞️</span>
+        <div class="feature-name">GIFs & media</div>
+        <div class="feature-desc">Integrated Tenor GIF search, image uploads, and rich text with markdown formatting built right into the comment box.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🛡️</span>
+        <div class="feature-name">Moderation tools</div>
+        <div class="feature-desc">Pin comments, flag spam, ban words, approve-before-show mode, and full moderation controls for org admins.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">🎨</span>
+        <div class="feature-name">Fully customizable</div>
+        <div class="feature-desc">Custom accent colors, per-org branding, feature toggles, and domain allowlisting to match your site perfectly.</div>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">📱</span>
+        <div class="feature-name">Responsive & dark</div>
+        <div class="feature-desc">The embed widget is pixel-perfect on mobile, tablet, and desktop. Dark-first design that looks great everywhere.</div>
+      </div>
+    </div>
+  </section>
+  <div id="commex-widget"></div> <script> window.CommexConfig = { orgSlug: "anipub", pageUrl: window.location.href, pageTitle: document.title, }; </script> <script src="http://localhost:3000/embed/commex.js" async></script>
+  </div>
+</div>
+
+<!--  PAGE: AUTH  -->
+<div class="page" id="page-auth">
+  <div class="auth-screen">
+    <div class="auth-card">
+      <div class="auth-logo">commex<span class="auth-logo-dot">.</span></div>
+      <div class="auth-tabs">
+        <button class="auth-tab active" id="auth-tab-login" onclick="switchAuthTab('login')">Sign in</button>
+        <button class="auth-tab" id="auth-tab-register" onclick="switchAuthTab('register')">Create account</button>
+      </div>
+      <div id="auth-error" style="display:none;color:var(--red);font-size:12px;margin-bottom:16px;padding:10px 14px;background:#ef444411;border-radius:8px;border:1px solid #ef444433"></div>
+      
+      <!-- Login form -->
+      <div id="auth-login-form">
+        <div class="form-group">
+          <label class="form-label">Email or username</label>
+          <input type="text" class="form-input" id="login-input" placeholder="you@example.com" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="login-password" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="login-btn" onclick="handleLogin()">
+          Sign in
+        </button>
+      </div>
+
+      <!-- Register form -->
+      <div id="auth-register-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Username</label>
+          <input type="text" class="form-input" id="reg-username" placeholder="cooluser123" autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-input" id="reg-email" placeholder="you@example.com" autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input type="password" class="form-input" id="reg-password" placeholder="Min. 8 characters" autocomplete="new-password">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:12px" id="register-btn" onclick="handleRegister()">
+          Create account
+        </button>
+      </div>
+
+      <div style="text-align:center;margin-top:20px">
+        <button class="btn btn-ghost btn-sm" onclick="showPage('home')">← Back to home</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  PAGE: DASHBOARD ─ -->
+<div class="page" id="page-dashboard">
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-section-label">Navigation</div>
+        <button class="sidebar-item active" id="sb-overview" onclick="showDashSection('overview')">
+          <span class="sidebar-item-icon">⬡</span> Overview
+        </button>
+        <button class="sidebar-item" id="sb-orgs" onclick="showDashSection('orgs')">
+          <span class="sidebar-item-icon">⊞</span> Organizations
+        </button>
+        <button class="sidebar-item" id="sb-profile" onclick="showDashSection('profile')">
+          <span class="sidebar-item-icon">◎</span> My profile
+        </button>
+      </div>
+      <div class="sidebar-section" id="sidebar-orgs-section">
+        <div class="sidebar-section-label">My orgs</div>
+        <div id="sidebar-org-list"></div>
+        <button class="sidebar-item" onclick="openCreateOrgModal()">
+          <span class="sidebar-item-icon" style="color:var(--accent2)">+</span>
+          <span style="color:var(--accent2)">New organization</span>
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="main-content">
+      <!-- Overview -->
+      <div class="content-area" id="dash-overview">
+        <div class="page-header">
+          <div>
+            <div class="page-title" id="dash-welcome">Welcome back</div>
+            <div class="page-sub">Here's what's happening with your organizations</div>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateOrgModal()">+ New organization</button>
+        </div>
+        <div style="padding: 24px 32px">
+          <div class="stats-grid" id="stats-grid">
+            <div class="stat-card">
+              <div class="stat-label">Organizations</div>
+              <div class="stat-value" id="stat-orgs">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total comments</div>
+              <div class="stat-value" id="stat-comments">—</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-label">Total reactions</div>
+              <div class="stat-value" id="stat-reactions">—</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:8px">
+            <div class="card-header">
+              <span class="card-title">Your organizations</span>
+              <button class="btn btn-ghost btn-sm" onclick="showDashSection('orgs')">View all</button>
+            </div>
+            <div id="overview-orgs-list">
+              <div class="empty-state">
+                <div class="empty-icon">⊞</div>
+                <div class="empty-title">No organizations yet</div>
+                <div class="empty-sub">Create your first org to start embedding comments on your website</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Organizations -->
+      <div class="content-area hidden" id="dash-orgs">
+        <div class="page-header">
+          <div>
+            <div class="page-title">Organizations</div>
+            <div class="page-sub">Manage your comment organizations</div>
+          </div>
+          <button class="btn btn-primary" onclick="openCreateOrgModal()">+ New organization</button>
+        </div>
+        <div style="padding: 24px 32px" id="orgs-grid">
+          <!-- Loaded dynamically -->
+        </div>
+      </div>
+
+      <!-- Org detail -->
+      <div class="content-area hidden" id="dash-org-detail">
+        <div class="page-header">
+          <div>
+            <button class="btn btn-ghost btn-sm" onclick="showDashSection('orgs')" style="margin-bottom:8px">← Back</button>
+            <div class="page-title" id="org-detail-name">Organization</div>
+            <div class="page-sub" id="org-detail-slug"></div>
+          </div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-ghost btn-sm" id="org-test-db-btn" onclick="testOrgDb()">Test DB</button>
+            <button class="btn btn-primary btn-sm" onclick="showOrgTab('settings')">Settings</button>
+          </div>
+        </div>
+        <div style="padding: 24px 32px">
+          <!-- Tabs -->
+          <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px">
+            <button class="auth-tab active" id="org-tab-embed" onclick="showOrgTab('embed')">Embed</button>
+            <button class="auth-tab" id="org-tab-settings" onclick="showOrgTab('settings')">Settings</button>
+            <button class="auth-tab" id="org-tab-features" onclick="showOrgTab('features')">Features</button>
+            <button class="auth-tab" id="org-tab-danger" onclick="showOrgTab('danger')">Danger zone</button>
+          </div>
+
+          <!-- Embed tab -->
+          <div id="org-section-embed">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title">Embed snippet</span>
+                <button class="btn btn-ghost btn-sm" id="copy-snippet-btn" onclick="copySnippet()">Copy</button>
+              </div>
+              <div class="card-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Add this to any page where you want comments to appear:</p>
+                <div class="snippet-box" id="embed-snippet-box"></div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header"><span class="card-title">Database status</span></div>
+              <div class="card-body">
+                <div style="display:flex;align-items:center;gap:12px">
+                  <span id="db-status-badge"></span>
+                  <span style="font-size:13px;color:var(--text-muted)" id="db-status-text"></span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Settings tab -->
+          <div id="org-section-settings" style="display:none">
+            <div class="card">
+              <div class="card-header"><span class="card-title">General settings</span></div>
+              <div class="card-body">
+                <div class="form-group">
+                  <label class="form-label">Organization name</label>
+                  <input type="text" class="form-input" id="org-edit-name">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Website URL</label>
+                  <input type="text" class="form-input" id="org-edit-website" placeholder="https://yoursite.com">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Description</label>
+                  <textarea class="form-input" id="org-edit-description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Accent color</label>
+                  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px">
+                    ${['#7c3aed','#3b82f6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#f97316'].map(c => `
+                      <div class="color-swatch" style="background:${c}" data-color="${c}" onclick="selectOrgColor('${c}')"></div>`).join('')}
+                    <input type="color" id="org-color-input" class="form-input" style="width:36px;height:28px;padding:2px;border-radius:6px;cursor:pointer">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    MongoDB connection string
+                    <span class="form-label-hint">(leave blank to keep current)</span>
+                  </label>
+                  <input type="password" class="form-input mono" id="org-edit-db" placeholder="mongodb+srv://...">
+                  <div class="form-hint">Your data is stored in your own database. We never read your content.</div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Allowed domains <span class="form-label-hint">(one per line, leave blank to allow all)</span></label>
+                  <textarea class="form-input mono" id="org-edit-domains" rows="3" placeholder="yoursite.com&#10;www.yoursite.com"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="saveOrgSettings()">Save settings</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Features tab -->
+          <div id="org-section-features" style="display:none">
+            <div class="card">
+              <div class="card-header"><span class="card-title">Feature toggles</span></div>
+              <div class="card-body" id="features-toggles"></div>
+            </div>
+          </div>
+
+          <!-- Danger zone -->
+          <div id="org-section-danger" style="display:none">
+            <div class="card" style="border-color:#ef444433">
+              <div class="card-header"><span class="card-title" style="color:var(--red)">⚠ Danger zone</span></div>
+              <div class="card-body">
+                <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Permanently delete this organization and all associated settings. Your MongoDB data is unaffected.</p>
+                <button class="btn btn-danger" onclick="deleteOrg()">Delete organization</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile -->
+      <div class="content-area hidden" id="dash-profile">
+        <div class="page-header">
+          <div>
+            <div class="page-title">My profile</div>
+            <div class="page-sub">Update your public identity</div>
+          </div>
+        </div>
+        <div style="padding: 24px 32px">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Profile info</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Display name</label>
+                <input type="text" class="form-input" id="profile-displayname">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Bio</label>
+                <textarea class="form-input" id="profile-bio" rows="3" placeholder="Tell people about yourself..."></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Website</label>
+                <input type="text" class="form-input" id="profile-website" placeholder="https://yoursite.com">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Avatar URL</label>
+                <input type="text" class="form-input" id="profile-avatar" placeholder="https://...">
+              </div>
+              <button class="btn btn-primary" onclick="saveProfile()">Save profile</button>
+            </div>
+          </div>
+          <div class="card" style="margin-top:16px">
+            <div class="card-header"><span class="card-title">Change password</span></div>
+            <div class="card-body">
+              <div class="form-group">
+                <label class="form-label">Current password</label>
+                <input type="password" class="form-input" id="pwd-current">
+              </div>
+              <div class="form-group">
+                <label class="form-label">New password</label>
+                <input type="password" class="form-input" id="pwd-new">
+              </div>
+              <button class="btn btn-primary" onclick="changePassword()">Update password</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--  MODALS -->
+<div class="modal-overlay" id="modal-create-org">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create organization</div>
+      <button class="modal-close" onclick="closeModal('create-org')">×</button>
+    </div>
+    <div class="modal-body">
+      <div id="create-org-error" style="display:none;color:var(--red);font-size:12px;margin-bottom:16px;padding:10px 14px;background:#ef444411;border-radius:8px;border:1px solid #ef444433"></div>
+      <div class="form-group">
+        <label class="form-label">Organization name <span style="color:var(--red)">*</span></label>
+        <input type="text" class="form-input" id="new-org-name" placeholder="Acme Corp">
+        <div class="form-hint">Must be unique across all organizations</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Website URL</label>
+        <input type="text" class="form-input" id="new-org-website" placeholder="https://acmecorp.com">
+      </div>
+      <div class="form-group">
+        <label class="form-label">
+          MongoDB connection string <span style="color:var(--red)">*</span>
+        </label>
+        <input type="password" class="form-input mono" id="new-org-db" placeholder="mongodb+srv://user:pass@cluster.mongodb.net/mydb">
+        <div class="form-hint">Your comments will be stored in this database. We test the connection before saving.</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Accent color</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px" id="create-org-colors">
+          ${['#7c3aed','#3b82f6','#06b6d4','#10b981','#f59e0b','#ef4444','#ec4899','#f97316'].map((c,i) => `
+            <div class="color-swatch ${i===0?'selected':''}" style="background:${c}" data-color="${c}" onclick="selectCreateOrgColor('${c}')"></div>`).join('')}
+        </div>
+        <input type="hidden" id="new-org-color" value="#7c3aed">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('create-org')">Cancel</button>
+      <button class="btn btn-primary" id="create-org-btn" onclick="createOrg()">
+        Create organization
+      </button>
+    </div>
+    
+</div>
+
+<script>
+  //  State & Config 
+  const API = '';  // relative URLs
+  let currentUser = null;
+  let currentToken = null;
+  let orgs = [];
+  let currentOrg = null;
+
+  //  Boot 
+  (function() {
+    currentToken = localStorage.getItem('commex_token');
+    try { currentUser = JSON.parse(localStorage.getItem('commex_user') || 'null'); } catch(e) {}
+    
+    if (currentToken && currentUser) {
+      updateNavUser();
+      // Verify token
+      apiFetch('/api/auth/me').then(data => {
+        currentUser = data.user;
+        localStorage.setItem('commex_user', JSON.stringify(data.user));
+        updateNavUser();
+      }).catch(() => logout());
+    }
+  })();
+
+  //  API 
+  async function apiFetch(path, options = {}) {
+    const headers = { 'Content-Type': 'application/json' };
+    if (currentToken) headers['Authorization'] = `Bearer ${currentToken}`;
+    const res = await fetch(API + path, { ...options, headers: { ...headers, ...options.headers } });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || data.errors?.[0]?.msg || 'Request failed');
+    return data;
+  }
+
+  //  Nav & Pages 
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    if (name === 'dashboard') loadDashboard();
+  }
+
+  function showAuthPage(mode) {
+    showPage('auth');
+    switchAuthTab(mode);
+  }
+
+  function scrollToFeatures() {
+    showPage('home');
+    setTimeout(() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+
+  function updateNavUser() {
+    const guestBtns = document.querySelectorAll('#nav-login, #nav-register');
+    const userEl = document.getElementById('nav-user');
+    const avatarEl = document.getElementById('nav-avatar');
+    const nameEl = document.getElementById('nav-username');
+    if (currentUser) {
+      guestBtns.forEach(b => b.style.display = 'none');
+      userEl.style.display = 'flex';
+      const initial = (currentUser.displayName || currentUser.username || 'U')[0].toUpperCase();
+      avatarEl.innerHTML = currentUser.avatar ? `<img src="${currentUser.avatar}" alt="">` : initial;
+      nameEl.textContent = currentUser.displayName || currentUser.username;
+    } else {
+      guestBtns.forEach(b => b.style.display = '');
+      userEl.style.display = 'none';
+    }
+  }
+
+  //  Auth 
+  function switchAuthTab(mode) {
+    document.getElementById('auth-tab-login').classList.toggle('active', mode === 'login');
+    document.getElementById('auth-tab-register').classList.toggle('active', mode === 'register');
+    document.getElementById('auth-login-form').style.display = mode === 'login' ? '' : 'none';
+    document.getElementById('auth-register-form').style.display = mode === 'register' ? '' : 'none';
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  async function handleLogin() {
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in...';
+    hideAuthError();
+    try {
+      const data = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          login: document.getElementById('login-input').value.trim(),
+          password: document.getElementById('login-password').value,
+        })
+      });
+      setAuth(data);
+      showPage('dashboard');
+      toast(`Welcome back, ${data.user.displayName || data.user.username}!`, 'success');
+    } catch (e) {
+      showAuthError(e.message);
+    }
+    btn.disabled = false; btn.textContent = 'Sign in';
+  }
+
+  async function handleRegister() {
+    const btn = document.getElementById('register-btn');
+    btn.disabled = true; btn.textContent = 'Creating account...';
+    hideAuthError();
+    try {
+      const data = await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: document.getElementById('reg-username').value.trim(),
+          email: document.getElementById('reg-email').value.trim(),
+          password: document.getElementById('reg-password').value,
+        })
+      });
+      setAuth(data);
+      showPage('dashboard');
+      toast('Account created! Welcome to Commex.', 'success');
+    } catch (e) {
+      showAuthError(e.message);
+    }
+    btn.disabled = false; btn.textContent = 'Create account';
+  }
+
+  function setAuth(data) {
+    currentToken = data.token;
+    currentUser = data.user;
+    localStorage.setItem('commex_token', data.token);
+    localStorage.setItem('commex_user', JSON.stringify(data.user));
+    updateNavUser();
+  }
+
+  function logout() {
+    currentToken = null; currentUser = null; orgs = [];
+    localStorage.removeItem('commex_token');
+    localStorage.removeItem('commex_user');
+    updateNavUser();
+    showPage('home');
+    toast('Signed out');
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('auth-error');
+    el.textContent = msg;
+    el.style.display = '';
+  }
+  function hideAuthError() {
+    document.getElementById('auth-error').style.display = 'none';
+  }
+
+  // Enter key on auth inputs
+  ['login-input','login-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+  });
+  ['reg-username','reg-email','reg-password'].forEach(id => {
+    document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') handleRegister(); });
+  });
+
+  //  Dashboard
+  async function loadDashboard() {
+    if (!currentUser) { showPage('auth'); return; }
+    document.getElementById('dash-welcome').textContent = `Welcome back, ${currentUser.displayName || currentUser.username}`;
+    
+    try {
+      const data = await apiFetch('/api/orgs/mine');
+      orgs = data.orgs || [];
+      renderSidebarOrgs();
+      renderOverview();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function renderSidebarOrgs() {
+    const container = document.getElementById('sidebar-org-list');
+    container.innerHTML = orgs.map(org => `
+      <button class="sidebar-org" onclick="openOrgDetail('${org.slug}')">
+        <div class="sidebar-org-dot" style="background:${org.accentColor || '#6366f1'}"></div>
+        <span class="sidebar-org-name">${org.name}</span>
+      </button>`).join('');
+  }
+
+  function renderOverview() {
+    document.getElementById('stat-orgs').textContent = orgs.length;
+    document.getElementById('stat-comments').textContent = orgs.reduce((s, o) => s + (o.totalComments || 0), 0).toLocaleString();
+    document.getElementById('stat-reactions').textContent = orgs.reduce((s, o) => s + (o.totalReactions || 0), 0).toLocaleString();
+
+    const container = document.getElementById('overview-orgs-list');
+    if (orgs.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⊞</div><div class="empty-title">No organizations yet</div><div class="empty-sub">Create one to get started</div></div>`;
+      return;
+    }
+    container.innerHTML = `<div style="padding:16px"><div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px">${orgs.map(orgCardHtml).join('')}</div></div>`;
+  }
+
+  function orgCardHtml(org) {
+    const initial = org.name[0].toUpperCase();
+    return `
+      <div class="org-card" onclick="openOrgDetail('${org.slug}')">
+        <div class="org-logo" style="background:${org.accentColor || '#6366f1'}">
+          ${org.logo ? `<img src="${org.logo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px">` : initial}
+        </div>
+        <div class="org-info">
+          <div class="org-name">${org.name}</div>
+          <div class="org-slug">${org.slug}</div>
+          <div class="org-status">
+            <div class="org-status-dot" style="background:${org.dbStatus==='connected'?'#4ade80':'#ef4444'}"></div>
+            ${org.dbStatus === 'connected' ? 'Connected' : 'DB error'}
+          </div>
+        </div>
+      </div>`;
+  }
+
+  function showDashSection(section) {
+    const sections = ['overview', 'orgs', 'org-detail', 'profile'];
+    sections.forEach(s => {
+      document.getElementById(`dash-${s}`).classList.toggle('hidden', s !== section);
+    });
+    const sbItems = ['overview', 'orgs', 'profile'];
+    sbItems.forEach(s => {
+      const el = document.getElementById(`sb-${s}`);
+      if (el) el.classList.toggle('active', s === section);
+    });
+
+    if (section === 'orgs') renderOrgsPage();
+    if (section === 'profile') renderProfile();
+  }
+
+  function renderOrgsPage() {
+    const container = document.getElementById('orgs-grid');
+    if (orgs.length === 0) {
+      container.innerHTML = `<div class="empty-state"><div class="empty-icon">⊞</div><div class="empty-title">No organizations</div><div class="empty-sub">Create your first org to get started embedding comments.</div></div>`;
+      return;
+    }
+    container.innerHTML = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px">${orgs.map(orgCardHtml).join('')}</div>`;
+  }
+
+  //  Org detail 
+  async function openOrgDetail(slug) {
+    try {
+      const data = await apiFetch(`/api/orgs/${slug}`);
+      currentOrg = data.org;
+      
+      document.getElementById('org-detail-name').textContent = currentOrg.name;
+      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
+      
+      showDashSection('org-detail');
+      showOrgTab('embed');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function showOrgTab(tab) {
+    ['embed','settings','features','danger'].forEach(t => {
+      document.getElementById(`org-tab-${t}`).classList.toggle('active', t === tab);
+      document.getElementById(`org-section-${t}`).style.display = t === tab ? '' : 'none';
+    });
+    if (tab === 'embed') renderEmbedTab();
+    if (tab === 'settings') renderSettingsTab();
+    if (tab === 'features') renderFeaturesTab();
+  }
+
+  function renderEmbedTab() {
+    if (!currentOrg) return;
+    const appUrl = window.location.origin;
+    const snippet = `&lt;!-- Commex Comments Widget --&gt;\n&lt;<span class="snippet-tag">div</span> <span class="snippet-attr">id</span>=<span class="snippet-val">"commex-widget"</span>&gt;&lt;/div&gt;\n&lt;<span class="snippet-tag">script</span>&gt;\n  window.CommexConfig = {\n    <span class="snippet-attr">orgSlug</span>: <span class="snippet-val">"${currentOrg.slug}"</span>,\n    <span class="snippet-attr">pageUrl</span>: <span class="snippet-val">window.location.href</span>,\n    <span class="snippet-attr">pageTitle</span>: <span class="snippet-val">document.title</span>,\n  };\n&lt;/<span class="snippet-tag">script</span>&gt;\n&lt;<span class="snippet-tag">script</span> <span class="snippet-attr">src</span>=<span class="snippet-val">"${appUrl}/embed/commex.js"</span> <span class="snippet-attr">async</span>&gt;&lt;/<span class="snippet-tag">script</span>&gt;`;
+    
+    document.getElementById('embed-snippet-box').innerHTML = snippet;
+
+    const statusEl = document.getElementById('db-status-badge');
+    const textEl = document.getElementById('db-status-text');
+    const isConn = currentOrg.dbStatus === 'connected';
+    statusEl.innerHTML = `<span class="badge ${isConn ? 'badge-green' : 'badge-red'}">${isConn ? '✓ Connected' : '✗ Error'}</span>`;
+    textEl.textContent = isConn ? 
+      `Last checked ${currentOrg.dbLastChecked ? timeAgo(currentOrg.dbLastChecked) : 'never'}` :
+      'Database connection failed — check your connection string';
+  }
+
+  function renderSettingsTab() {
+    if (!currentOrg) return;
+    document.getElementById('org-edit-name').value = currentOrg.name || '';
+    document.getElementById('org-edit-website').value = currentOrg.websiteUrl || '';
+    document.getElementById('org-edit-description').value = currentOrg.description || '';
+    document.getElementById('org-edit-domains').value = (currentOrg.allowedDomains || []).join('\n');
+    document.getElementById('org-color-input').value = currentOrg.accentColor || '#7c3aed';
+    
+    // Select current color swatch
+    document.querySelectorAll('#org-section-settings .color-swatch').forEach(s => {
+      s.classList.toggle('selected', s.dataset.color === currentOrg.accentColor);
+    });
+  }
+
+  function renderFeaturesTab() {
+    if (!currentOrg) return;
+    const features = currentOrg.features || {};
+    const defs = [
+      { key: 'reactions', label: 'Reactions', sub: 'Emoji reactions on comments' },
+      { key: 'gifs', label: 'GIFs', sub: 'Allow GIF attachments in comments' },
+      { key: 'images', label: 'Images', sub: 'Allow image uploads' },
+      { key: 'threading', label: 'Threaded replies', sub: 'Enable nested comment replies' },
+      { key: 'voting', label: 'Upvoting / Downvoting', sub: 'Let users vote on comments' },
+      { key: 'markdown', label: 'Markdown', sub: 'Allow **bold**, *italic*, `code`, links' },
+      { key: 'mentions', label: '@Mentions', sub: 'Notify users when mentioned' },
+      { key: 'notifications', label: 'Notifications', sub: 'Send in-app notifications for replies/reactions' },
+      { key: 'anonymousComments', label: 'Anonymous comments', sub: 'Allow commenting without account' },
+      { key: 'requireApproval', label: 'Require approval', sub: 'Hold all comments for moderation' },
+    ];
+    document.getElementById('features-toggles').innerHTML = defs.map(d => `
+      <div class="toggle-group">
+        <div>
+          <div class="toggle-label">${d.label}</div>
+          <div class="toggle-sub">${d.sub}</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" ${features[d.key] !== false ? 'checked' : ''} onchange="toggleFeature('${d.key}', this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>`).join('');
+  }
+
+  async function toggleFeature(key, value) {
+    if (!currentOrg) return;
+    try {
+      const features = { ...currentOrg.features, [key]: value };
+      const data = await apiFetch(`/api/orgs/${currentOrg.slug}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ features })
+      });
+      currentOrg = data.org;
+      toast(`${key} ${value ? 'enabled' : 'disabled'}`, 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function saveOrgSettings() {
+    if (!currentOrg) return;
+    try {
+      const updates = {
+        name: document.getElementById('org-edit-name').value.trim(),
+        websiteUrl: document.getElementById('org-edit-website').value.trim(),
+        description: document.getElementById('org-edit-description').value.trim(),
+        accentColor: document.getElementById('org-color-input').value,
+        allowedDomains: document.getElementById('org-edit-domains').value
+          .split('\n').map(d => d.trim()).filter(Boolean),
+      };
+      const newDb = document.getElementById('org-edit-db').value.trim();
+      if (newDb) updates.dbConnectionString = newDb;
+
+      const data = await apiFetch(`/api/orgs/${currentOrg.slug}`, {
+        method: 'PATCH',
+        body: JSON.stringify(updates)
+      });
+      currentOrg = data.org;
+      // Update slug in URL if name changed
+      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
+      document.getElementById('org-detail-name').textContent = currentOrg.name;
+      await loadDashboard();
+      toast('Settings saved', 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function testOrgDb() {
+    if (!currentOrg) return;
+    const btn = document.getElementById('org-test-db-btn');
+    btn.disabled = true; btn.textContent = 'Testing...';
+    try {
+      const data = await apiFetch(`/api/orgs/${currentOrg.slug}/test-db`, { method: 'POST' });
+      toast(data.message, data.status === 'connected' ? 'success' : 'error');
+      currentOrg.dbStatus = data.status;
+      renderEmbedTab();
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+    btn.disabled = false; btn.textContent = 'Test DB';
+  }
+
+  async function deleteOrg() {
+    if (!currentOrg) return;
+    if (!confirm(`Delete "${currentOrg.name}"? This cannot be undone. Your database will NOT be deleted.`)) return;
+    try {
+      await apiFetch(`/api/orgs/${currentOrg.slug}`, { method: 'DELETE' });
+      toast('Organization deleted', 'success');
+      currentOrg = null;
+      await loadDashboard();
+      showDashSection('overview');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  function copySnippet() {
+    const box = document.getElementById('embed-snippet-box');
+    const text = box.innerText;
+    navigator.clipboard.writeText(text).then(() => toast('Snippet copied!', 'success'));
+  }
+
+  function selectOrgColor(color) {
+    document.querySelectorAll('#org-section-settings .color-swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === color));
+    document.getElementById('org-color-input').value = color;
+  }
+
+  function selectCreateOrgColor(color) {
+    document.querySelectorAll('#create-org-colors .color-swatch').forEach(s => s.classList.toggle('selected', s.dataset.color === color));
+    document.getElementById('new-org-color').value = color;
+  }
+
+  //  Profile
+  function renderProfile() {
+    if (!currentUser) return;
+    document.getElementById('profile-displayname').value = currentUser.displayName || '';
+    document.getElementById('profile-bio').value = currentUser.bio || '';
+    document.getElementById('profile-website').value = currentUser.website || '';
+    document.getElementById('profile-avatar').value = currentUser.avatar || '';
+  }
+
+  async function saveProfile() {
+    try {
+      const data = await apiFetch('/api/users/me/profile', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          displayName: document.getElementById('profile-displayname').value.trim(),
+          bio: document.getElementById('profile-bio').value.trim(),
+          website: document.getElementById('profile-website').value.trim(),
+          avatar: document.getElementById('profile-avatar').value.trim(),
+        })
+      });
+      currentUser = { ...currentUser, ...data.user };
+      localStorage.setItem('commex_user', JSON.stringify(currentUser));
+      updateNavUser();
+      toast('Profile saved', 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  async function changePassword() {
+    try {
+      await apiFetch('/api/users/me/password', {
+        method: 'PATCH',
+        body: JSON.stringify({
+          currentPassword: document.getElementById('pwd-current').value,
+          newPassword: document.getElementById('pwd-new').value,
+        })
+      });
+      document.getElementById('pwd-current').value = '';
+      document.getElementById('pwd-new').value = '';
+      toast('Password updated', 'success');
+    } catch (e) {
+      toast(e.message, 'error');
+    }
+  }
+
+  //  Create Org modal
+  function openCreateOrgModal() {
+    document.getElementById('modal-create-org').classList.add('show');
+    document.getElementById('new-org-name').focus();
+  }
+  function closeModal(name) {
+    document.getElementById(`modal-${name}`).classList.remove('show');
+  }
+  document.getElementById('modal-create-org').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeModal('create-org');
+  });
+
+  async function createOrg() {
+    const btn = document.getElementById('create-org-btn');
+    const errEl = document.getElementById('create-org-error');
+    errEl.style.display = 'none';
+    btn.disabled = true; btn.textContent = 'Testing connection...';
+
+    try {
+      const data = await apiFetch('/api/orgs', {
+        method: 'POST',
+        body: JSON.stringify({
+          name: document.getElementById('new-org-name').value.trim(),
+          websiteUrl: document.getElementById('new-org-website').value.trim(),
+          dbConnectionString: document.getElementById('new-org-db').value.trim(),
+          accentColor: document.getElementById('new-org-color').value,
+        })
+      });
+
+      closeModal('create-org');
+      orgs.push(data.org);
+      renderSidebarOrgs();
+      toast(`"${data.org.name}" created!`, 'success');
+      openOrgDetail(data.org.slug);
+      showDashSection('org-detail');
+
+      // Reset form
+      ['new-org-name','new-org-website','new-org-db'].forEach(id => document.getElementById(id).value = '');
+    } catch (e) {
+      errEl.textContent = e.message;
+      errEl.style.display = '';
+    }
+    btn.disabled = false; btn.textContent = 'Create organization';
+  }
+
+  //  Toast 
+  function toast(msg, type = '') {
+    const container = document.getElementById('toast-container');
+    const el = document.createElement('div');
+    el.className = `toast ${type}`;
+    const icon = type === 'success' ? '✓' : type === 'error' ? '✗' : 'ℹ';
+    el.innerHTML = `<span style="color:${type==='success'?'#4ade80':type==='error'?'#ef4444':'#71717a'}">${icon}</span> ${msg}`;
+    container.appendChild(el);
+    setTimeout(() => el.remove(), 3500);
+  }
+
+  function timeAgo(date) {
+    const seconds = Math.floor((Date.now() - new Date(date)) / 1000);
+    if (seconds < 60) return 'just now';
+    if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
+    if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
+    return `${Math.floor(seconds / 86400)}d ago`;
+  }
+</script>
+</body>
+</html>

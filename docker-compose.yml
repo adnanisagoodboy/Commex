@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  commex:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/commex
+      - JWT_SECRET=change-this-in-production-use-openssl-rand
+      - APP_URL=http://localhost:3000
+      - NODE_ENV=production
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:7
+    ports:
+      - "27017:27017"
+    volumes:
+      - commex_mongo:/data/db
+    restart: unless-stopped
+
+volumes:
+  commex_mongo:
