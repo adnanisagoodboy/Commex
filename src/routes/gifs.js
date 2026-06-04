@@ -14,7 +14,8 @@ const GIPHY_PUBLIC_KEY = 'dc6zaTOxFJmzC'; // Giphy's official public beta key
 async function searchGiphy(q, limit, apiKey) {
   const key = apiKey || GIPHY_PUBLIC_KEY;
   const url = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=${limit}&rating=g&lang=en`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
+  console.log(res)
   if (!res.ok) throw new Error(`Giphy error ${res.status}`);
   const data = await res.json();
   return (data.data || []).map(g => ({
