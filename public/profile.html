@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Profile — Commex</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050505;--s:#0d0d0d;--s2:#111;--b:#1e1e1e;--b2:#2a2a2a;--t:#e4e4e7;--tm:#71717a;--td:#52525b;--a:#7c3aed;--a2:#a78bfa;--ag:#7c3aed33}
+body{background:var(--bg);color:var(--t);font-family:'Inter',sans-serif;min-height:100vh}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(5,5,5,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--b)}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--t);cursor:pointer;display:flex;align-items:center;gap:8px}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 8px var(--a)}
+.nav-btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;transition:all .15s}
+.btn-ghost{background:transparent;color:var(--tm);border:1px solid transparent}
+.btn-ghost:hover{background:var(--s2);color:var(--t)}
+.btn-primary{background:var(--a);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.wrap{max-width:860px;margin:0 auto;padding:80px 24px 40px}
+.profile-header{display:flex;gap:24px;align-items:flex-start;padding:32px;background:var(--s);border:1px solid var(--b);border-radius:20px;margin-bottom:24px}
+.profile-avatar{width:88px;height:88px;border-radius:50%;background:var(--ag);border:3px solid var(--a);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--a2);flex-shrink:0;overflow:hidden}
+.profile-avatar img{width:100%;height:100%;object-fit:cover}
+.profile-info{flex:1}
+.profile-name{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;letter-spacing:-.02em;margin-bottom:3px}
+.profile-username{font-size:14px;color:var(--td);font-weight:500;margin-bottom:10px}
+.profile-bio{font-size:14px;color:var(--tm);line-height:1.7;margin-bottom:12px}
+.profile-meta{display:flex;gap:16px;flex-wrap:wrap}
+.profile-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--td)}
+.profile-meta-item a{color:var(--a2);text-decoration:none}
+.profile-meta-item a:hover{text-decoration:underline}
+.profile-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:18px;text-align:center}
+.stat-n{font-family:'Syne',sans-serif;font-size:24px;font-weight:700;color:var(--t)}
+.stat-l{font-size:11px;color:var(--td);margin-top:3px;font-weight:500}
+.section-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px;color:var(--t);display:flex;align-items:center;gap:8px}
+.comment-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .15s}
+.comment-card:hover{border-color:var(--b2)}
+.comment-site{font-size:11px;color:var(--td);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.comment-site a{color:var(--a2);text-decoration:none;font-weight:500}
+.comment-site a:hover{text-decoration:underline}
+.comment-content{font-size:13.5px;color:var(--tm);line-height:1.65;white-space:pre-wrap;word-break:break-word}
+.comment-footer{display:flex;align-items:center;gap:12px;margin-top:10px;font-size:11px;color:var(--td)}
+.badge{padding:2px 7px;border-radius:4px;font-size:10px;font-weight:600;background:var(--ag);color:var(--a2)}
+.empty{text-align:center;padding:48px;color:var(--td);font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:10px}
+.private-notice{text-align:center;padding:32px;background:var(--s);border:1px solid var(--b);border-radius:12px;color:var(--td);font-size:13px}
+.loading{text-align:center;padding:40px;color:var(--td)}
+.spin{display:inline-block;width:20px;height:20px;border:2px solid var(--b2);border-top-color:var(--a);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.orgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:24px}
+.org-chip{background:var(--s);border:1px solid var(--b);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;text-decoration:none;color:inherit}
+.org-chip:hover{border-color:var(--b2);background:var(--s2)}
+.org-chip-logo{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#fff;flex-shrink:0;overflow:hidden}
+.org-chip-logo img{width:100%;height:100%;object-fit:cover}
+.org-chip-name{font-size:13px;font-weight:600;color:var(--t)}
+.org-chip-slug{font-size:11px;color:var(--td)}
+.hide-toggle{font-size:12px;color:var(--a2);cursor:pointer;background:none;border:none;font-family:inherit;padding:0}
+.hide-toggle:hover{text-decoration:underline}
+@media(max-width:600px){.profile-header{flex-direction:column;align-items:center;text-align:center}.profile-meta{justify-content:center}.profile-stats{grid-template-columns:repeat(3,1fr)}.wrap{padding:70px 14px 30px}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand" onclick="location.href='/'"><div class="nav-dot"></div>Commex</div>
+  <div id="nav-btns" style="display:flex;gap:8px">
+    <button class="nav-btn btn-ghost" onclick="location.href='/'">Home</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div id="root"><div class="loading"><span class="spin"></span></div></div>
+</div>
+
+<script>
+const username = location.pathname.split('/').pop();
+let currentUser = null;
+try { currentUser = JSON.parse(localStorage.getItem('cx_user') || localStorage.getItem('commex_user') || 'null'); } catch(_){}
+const token = localStorage.getItem('cx_token') || localStorage.getItem('commex_token') || '';
+const isOwn = currentUser && currentUser.username === username;
+
+if (currentUser) {
+  document.getElementById('nav-btns').innerHTML = `
+    <button class="nav-btn btn-ghost" onclick="location.href='/'">Dashboard</button>
+    <button class="nav-btn btn-ghost" onclick="logout()">Sign out</button>`;
+}
+
+function logout() {
+  ['cx_token','cx_user','commex_token','commex_user'].forEach(k => localStorage.removeItem(k));
+  location.href = '/';
+}
+
+async function apiFetch(path) {
+  const h = {};
+  if (token) h['Authorization'] = `Bearer ${token}`;
+  const r = await fetch(path, { headers: h });
+  if (!r.ok) throw new Error((await r.json()).error || 'Failed');
+  return r.json();
+}
+
+function timeAgo(d) {
+  const s = Math.floor((Date.now()-new Date(d))/1000);
+  if(s<60) return 'just now';
+  if(s<3600) return `${Math.floor(s/60)}m ago`;
+  if(s<86400) return `${Math.floor(s/3600)}h ago`;
+  if(s<2592000) return `${Math.floor(s/86400)}d ago`;
+  return new Date(d).toLocaleDateString();
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+async function load() {
+  const root = document.getElementById('root');
+  try {
+    const data = await apiFetch(`/api/users/${username}`);
+    const u = data.user;
+    document.title = `${u.displayName || u.username} — Commex`;
+
+    const initial = (u.displayName || u.username || 'U')[0].toUpperCase();
+    const avatarHtml = u.avatar
+      ? `<img src="${esc(u.avatar)}" alt="">`
+      : initial;
+
+    const orgsHtml = (u.ownedOrgs || []).length > 0 ? `
+      <div class="section-title">Organizations</div>
+      <div class="orgs-grid">
+        ${u.ownedOrgs.map(org => `
+          <a class="org-chip" href="/org/${esc(org.slug)}">
+            <div class="org-chip-logo" style="background:${esc(org.accentColor||'#7c3aed')}">
+              ${org.logo ? `<img src="${esc(org.logo)}" alt="">` : esc((org.name||'O')[0])}
+            </div>
+            <div>
+              <div class="org-chip-name">${esc(org.name)}</div>
+              <div class="org-chip-slug">${esc(org.slug)}</div>
+            </div>
+          </a>`).join('')}
+      </div>` : '';
+
+    root.innerHTML = `
+      <div class="profile-header">
+        <div class="profile-avatar">${avatarHtml}</div>
+        <div class="profile-info">
+          <div class="profile-name">${esc(u.displayName || u.username)}</div>
+          <div class="profile-username">@${esc(u.username)}</div>
+          ${u.bio ? `<div class="profile-bio">${esc(u.bio)}</div>` : ''}
+          <div class="profile-meta">
+            <span class="profile-meta-item">💬 ${u.commentCount||0} comments</span>
+            ${u.website ? `<span class="profile-meta-item">🔗 <a href="${esc(u.website)}" target="_blank" rel="noopener">${esc(u.website.replace(/^https?:\/\//,''))}</a></span>` : ''}
+            <span class="profile-meta-item">📅 Joined ${new Date(u.createdAt).toLocaleDateString('en',{month:'short',year:'numeric'})}</span>
+            ${isOwn ? `<button class="hide-toggle" onclick="location.href='/#profile'">✏ Edit profile</button>` : ''}
+          </div>
+        </div>
+      </div>
+
+      ${orgsHtml}
+
+      <div id="activity-section">
+        <div class="section-title">
+          Recent activity
+          ${isOwn ? `<button class="hide-toggle" id="toggle-activity">Hide from public</button>` : ''}
+        </div>
+        <div id="activity-list"><div class="loading"><span class="spin"></span></div></div>
+      </div>`;
+
+    loadActivity(u);
+  } catch(e) {
+    root.innerHTML = `<div class="empty"><div class="empty-icon">😕</div><div>User not found</div></div>`;
+  }
+}
+
+async function loadActivity(u) {
+  const list = document.getElementById('activity-list');
+  if (!list) return;
+
+  // If not own profile and activity is hidden
+  if (!isOwn && u.hideActivity) {
+    list.innerHTML = `<div class="private-notice">🔒 This user's activity is private</div>`;
+    return;
+  }
+
+  try {
+    const data = await apiFetch(`/api/users/me/activity`);
+    const comments = data.comments || [];
+
+    if (comments.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div>No comments yet</div></div>`;
+      return;
+    }
+
+    list.innerHTML = comments.map(c => `
+      <div class="comment-card">
+        <div class="comment-site">
+          <span class="badge">${esc(c.orgName)}</span>
+          ${c.pageUrl ? `<a href="${esc(c.pageUrl)}" target="_blank" rel="noopener">${esc(c.pageTitle || c.pageUrl)}</a>` : ''}
+        </div>
+        <div class="comment-content">${esc(c.content).substring(0,300)}${c.content.length>300?'…':''}</div>
+        <div class="comment-footer">
+          <span>${timeAgo(c.createdAt)}</span>
+          ${c.totalReactions > 0 ? `<span>❤ ${c.totalReactions}</span>` : ''}
+          ${c.replyCount > 0 ? `<span>↩ ${c.replyCount}</span>` : ''}
+          ${c.isEdited ? '<span>edited</span>' : ''}
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    if (isOwn) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div>No activity to show yet</div></div>`;
+    } else {
+      list.innerHTML = `<div class="private-notice">Activity only visible to the user</div>`;
+    }
+  }
+}
+
+load();
+</script>
+</body>
+</html>

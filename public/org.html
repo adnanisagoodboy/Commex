@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Organization — Commex</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#050505;--s:#0d0d0d;--s2:#111;--b:#1e1e1e;--b2:#2a2a2a;--t:#e4e4e7;--tm:#71717a;--td:#52525b;--a:#7c3aed;--a2:#a78bfa;--ag:#7c3aed33}
+body{background:var(--bg);color:var(--t);font-family:'Inter',sans-serif;min-height:100vh}
+.nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:0 32px;height:60px;background:rgba(5,5,5,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--b)}
+.nav-brand{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--t);cursor:pointer;display:flex;align-items:center;gap:8px}
+.nav-dot{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 8px var(--a)}
+.nav-btn{padding:7px 16px;border-radius:8px;border:none;cursor:pointer;font-family:inherit;font-size:13px;font-weight:500;transition:all .15s}
+.btn-ghost{background:transparent;color:var(--tm);border:1px solid transparent}
+.btn-ghost:hover{background:var(--s2);color:var(--t)}
+.btn-primary{background:var(--a);color:#fff}
+.btn-primary:hover{filter:brightness(1.1)}
+.wrap{max-width:900px;margin:0 auto;padding:80px 24px 40px}
+.org-hero{display:flex;gap:24px;align-items:flex-start;padding:32px;background:var(--s);border:1px solid var(--b);border-radius:20px;margin-bottom:24px;position:relative;overflow:hidden}
+.org-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 100% 0%,var(--ag),transparent);pointer-events:none}
+.org-logo{width:80px;height:80px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:#fff;flex-shrink:0;position:relative;overflow:hidden}
+.org-logo img{width:100%;height:100%;object-fit:cover}
+.org-info{flex:1;position:relative}
+.org-name{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+.org-slug{font-size:12px;color:var(--td);font-family:monospace;margin-bottom:10px}
+.org-desc{font-size:14px;color:var(--tm);line-height:1.7;margin-bottom:14px}
+.org-meta{display:flex;gap:16px;flex-wrap:wrap}
+.org-meta-item{font-size:12px;color:var(--td);display:flex;align-items:center;gap:4px}
+.org-meta-item a{color:var(--a2);text-decoration:none}
+.org-meta-item a:hover{text-decoration:underline}
+.embed-card{background:var(--s);border:1px solid var(--b);border-radius:14px;padding:20px;margin-bottom:24px}
+.embed-title{font-size:14px;font-weight:600;margin-bottom:10px;color:var(--t)}
+.snippet{background:#030303;border:1px solid var(--b);border-radius:8px;padding:14px;font-family:monospace;font-size:12px;color:#a78bfa;line-height:1.8;overflow-x:auto;position:relative}
+.snippet .tag{color:#67e8f9}
+.snippet .attr{color:#fbbf24}
+.snippet .val{color:#4ade80}
+.copy-btn{position:absolute;top:8px;right:8px;background:var(--s2);border:1px solid var(--b2);color:var(--tm);font-family:inherit;font-size:11px;padding:4px 10px;border-radius:5px;cursor:pointer;transition:all .15s}
+.copy-btn:hover{color:var(--t);background:var(--b)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px}
+.stat-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;text-align:center}
+.stat-n{font-family:'Syne',sans-serif;font-size:22px;font-weight:700}
+.stat-l{font-size:11px;color:var(--td);margin-top:2px;font-weight:500}
+.section-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:14px}
+.comment-card{background:var(--s);border:1px solid var(--b);border-radius:12px;padding:16px;margin-bottom:10px;transition:border-color .15s}
+.comment-card:hover{border-color:var(--b2)}
+.comment-author{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.av{width:28px;height:28px;border-radius:50%;background:var(--ag);border:1.5px solid var(--a);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--a2);overflow:hidden;flex-shrink:0}
+.av img{width:100%;height:100%;object-fit:cover}
+.author-name{font-size:13px;font-weight:600}
+.author-time{font-size:11px;color:var(--td)}
+.comment-page{font-size:11px;color:var(--td);margin-bottom:6px}
+.comment-page a{color:var(--a2);text-decoration:none}
+.comment-page a:hover{text-decoration:underline}
+.comment-content{font-size:13.5px;color:var(--tm);line-height:1.65;word-break:break-word}
+.load-more{text-align:center;margin:16px 0}
+.load-more button{background:transparent;border:1px solid var(--b2);color:var(--tm);padding:8px 20px;border-radius:8px;cursor:pointer;font-family:inherit;font-size:13px;transition:all .15s}
+.load-more button:hover{background:var(--s2);color:var(--t)}
+.empty{text-align:center;padding:40px;color:var(--td);font-size:13px}
+.empty-icon{font-size:28px;margin-bottom:8px}
+.loading{text-align:center;padding:32px}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--b2);border-top-color:var(--a);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.features-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.feat-chip{padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600;background:var(--s2);border:1px solid var(--b);color:var(--td)}
+.feat-chip.on{background:var(--ag);border-color:var(--a);color:var(--a2)}
+@media(max-width:600px){.org-hero{flex-direction:column;align-items:center;text-align:center}.org-meta{justify-content:center}.stats-row{grid-template-columns:repeat(3,1fr)}.wrap{padding:70px 14px 30px}}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav-brand" onclick="location.href='/'"><div class="nav-dot"></div>Commex</div>
+  <div id="nav-btns" style="display:flex;gap:8px">
+    <button class="nav-btn btn-ghost" onclick="location.href='/'">Home</button>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div id="root"><div class="loading"><span class="spin"></span></div></div>
+</div>
+
+<script>
+const slug = location.pathname.split('/').pop();
+let currentUser = null;
+try { currentUser = JSON.parse(localStorage.getItem('cx_user') || localStorage.getItem('commex_user') || 'null'); } catch(_){}
+const token = localStorage.getItem('cx_token') || localStorage.getItem('commex_token') || '';
+
+if (currentUser) {
+  document.getElementById('nav-btns').innerHTML = `
+    <button class="nav-btn btn-ghost" onclick="location.href='/#dashboard'">Dashboard</button>
+    <button class="nav-btn btn-ghost" onclick="logout()">Sign out</button>`;
+}
+
+function logout(){['cx_token','cx_user','commex_token','commex_user'].forEach(k=>localStorage.removeItem(k));location.href='/';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function timeAgo(d){const s=Math.floor((Date.now()-new Date(d))/1000);if(s<60)return'just now';if(s<3600)return`${Math.floor(s/60)}m ago`;if(s<86400)return`${Math.floor(s/3600)}h ago`;if(s<2592000)return`${Math.floor(s/86400)}d ago`;return new Date(d).toLocaleDateString();}
+
+async function apiFetch(path){
+  const h={};
+  if(token) h['Authorization']=`Bearer ${token}`;
+  const r=await fetch(path,{headers:h});
+  if(!r.ok) throw new Error((await r.json()).error||'Failed');
+  return r.json();
+}
+
+let commentPage = 1;
+let orgConfig = null;
+
+async function load() {
+  const root = document.getElementById('root');
+  try {
+  
+    const cfg = await apiFetch(`/api/embed/config/${slug}`);
+    orgConfig = cfg.org;
+    document.title = `${orgConfig.name} — Commex`;
+
+    const a = orgConfig.accentColor || '#7c3aed';
+    const features = orgConfig.features || {};
+    const featList = [
+      ['reactions', '😊 Reactions'],['gifs','🎞 GIFs'],['threading','🧵 Threads'],
+      ['voting','▲ Voting'],['markdown','✍ Markdown'],['notifications','🔔 Notifs'],
+    ];
+
+    const appUrl = window.location.origin;
+    const snippetRaw = `<!-- Commex -->\n<div id="commex-widget"></div>\n<script>\n  window.CommexConfig = {\n    orgSlug: "${esc(orgConfig.slug)}",\n    pageUrl: window.location.href,\n  };\n<\/script>\n<script src="${appUrl}/embed/commex.js" async><\/script>`;
+    const snippetHtml = snippetRaw
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/&lt;(\/?script|div)/g,'<span class="tag">&lt;$1</span>')
+      .replace(/(orgSlug|pageUrl)/g,'<span class="attr">$1</span>')
+      .replace(/(&quot;[^&]*&quot;|window\.location\.href)/g,'<span class="val">$0</span>');
+
+    root.innerHTML = `
+      <div class="org-hero" style="--a:${a};--ag:${a}22">
+        <div class="org-logo" style="background:${a}">
+          ${orgConfig.logo ? `<img src="${esc(orgConfig.logo)}" alt="">` : esc((orgConfig.name||'O')[0])}
+        </div>
+        <div class="org-info">
+          <div class="org-name">${esc(orgConfig.name)}</div>
+          <div class="org-slug">commex/${esc(orgConfig.slug)}</div>
+          ${orgConfig.description ? `<div class="org-desc">${esc(orgConfig.description)}</div>` : ''}
+          <div class="org-meta">
+            ${orgConfig.websiteUrl ? `<span class="org-meta-item">🌐 <a href="${esc(orgConfig.websiteUrl)}" target="_blank" rel="noopener">${esc(orgConfig.websiteUrl.replace(/^https?:\/\//,''))}</a></span>` : ''}
+          </div>
+          <div class="features-list">
+            ${featList.map(([k,l]) => `<span class="feat-chip ${features[k]!==false?'on':''}">${l}</span>`).join('')}
+          </div>
+        </div>
+      </div>
+
+      <div class="embed-card">
+        <div class="embed-title">📋 Embed on your site</div>
+        <div class="snippet" id="snippet">${snippetHtml}<button class="copy-btn" onclick="copySnippet()">Copy</button></div>
+      </div>
+
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-n" id="stat-comments">—</div><div class="stat-l">Comments</div></div>
+        <div class="stat-card"><div class="stat-n" id="stat-reactions">—</div><div class="stat-l">Reactions</div></div>
+        <div class="stat-card"><div class="stat-n" id="stat-pages">—</div><div class="stat-l">Pages</div></div>
+      </div>
+
+      <div class="section-title">Recent activity</div>
+      <div id="comments-list"><div class="loading"><span class="spin"></span></div></div>
+      <div id="load-more-wrap"></div>`;
+
+    loadStats();
+    loadComments();
+  } catch(e) {
+    root.innerHTML = `<div class="empty"><div class="empty-icon">😕</div><div>Organization not found or private</div></div>`;
+  }
+}
+
+async function loadStats() {
+  if (!token) return;
+  try {
+    const data = await apiFetch(`/api/moderation/${slug}/stats`);
+    document.getElementById('stat-comments').textContent = (data.totalComments||0).toLocaleString();
+    document.getElementById('stat-reactions').textContent = (data.totalReactions||0).toLocaleString();
+    document.getElementById('stat-pages').textContent = (data.topPages?.length||0).toLocaleString();
+  } catch(_) {}
+}
+
+async function loadComments() {
+  const list = document.getElementById('comments-list');
+  const lmw = document.getElementById('load-more-wrap');
+  if (!list) return;
+
+  
+  try {
+    if (!token) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">🔒</div><div>Sign in to view organization activity</div></div>`;
+      return;
+    }
+    const data = await apiFetch(`/api/moderation/${slug}/page?pageUrl=__all__&page=${commentPage}&limit=15`);
+    const comments = data.comments || [];
+
+    if (commentPage === 1 && comments.length === 0) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div>No comments yet</div></div>`;
+      return;
+    }
+
+    const html = comments.filter(c => !c.isDeleted).map(c => `
+      <div class="comment-card">
+        <div class="comment-author">
+          <div class="av">${c.authorAvatar ? `<img src="${esc(c.authorAvatar)}" alt="">` : esc((c.authorName||'U')[0])}</div>
+          <div>
+            <div class="author-name">${esc(c.authorName)}</div>
+            <div class="author-time">${timeAgo(c.createdAt)}</div>
+          </div>
+        </div>
+        ${c.pageUrl ? `<div class="comment-page">on <a href="${esc(c.pageUrl)}" target="_blank" rel="noopener">${esc(c.pageTitle||c.pageUrl)}</a></div>` : ''}
+        <div class="comment-content">${esc(c.content).substring(0,280)}${c.content.length>280?'…':''}</div>
+      </div>`).join('');
+
+    if (commentPage === 1) {
+      list.innerHTML = html;
+    } else {
+      list.innerHTML += html;
+    }
+
+    if (comments.length >= 15) {
+      lmw.innerHTML = `<div class="load-more"><button onclick="loadMoreComments()">Load more</button></div>`;
+    } else {
+      lmw.innerHTML = '';
+    }
+  } catch(e) {
+    if (commentPage === 1) {
+      list.innerHTML = `<div class="empty"><div class="empty-icon">💬</div><div>Activity visible to org admins only</div></div>`;
+    }
+  }
+}
+
+function loadMoreComments() {
+  commentPage++;
+  loadComments();
+}
+
+function copySnippet() {
+  const el = document.getElementById('snippet');
+  const text = el.innerText.replace('Copy','').trim();
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = el.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 2000);
+  });
+}
+
+load();
+</script>
+</body>
+</html>

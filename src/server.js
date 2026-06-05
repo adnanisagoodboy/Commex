@@ -9,7 +9,7 @@ const rateLimit = require('express-rate-limit');
 
 const app = express();
 
-//  Security & Middleware 
+// ─── Security & Middleware ────────────────────────────────────────────────────
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
@@ -32,7 +32,7 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-//  Rate Limiting 
+// ─── Rate Limiting ────────────────────────────────────────────────────────────
 const limiter = rateLimit({
   windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
   max: parseInt(process.env.RATE_LIMIT_MAX) || 100,
@@ -43,7 +43,7 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-//  Static Files 
+// ─── Static Files ─────────────────────────────────────────────────────────────
 // Serve public dashboard
 app.use(express.static(path.join(__dirname, '../public')));
 
@@ -55,11 +55,11 @@ app.use('/embed', (req, res, next) => {
   next();
 }, express.static(path.join(__dirname, '../embed')));
 
-//  Database Connection 
+// ─── Database Connection ──────────────────────────────────────────────────────
 const { connectDB } = require('./utils/database');
 connectDB();
 
-//  Routes 
+// ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth',          require('./routes/auth'));
 app.use('/api/users',         require('./routes/users'));
 app.use('/api/orgs',          require('./routes/orgs'));
@@ -71,12 +71,20 @@ app.use('/api/notifications', require('./routes/notifications'));
 app.use('/api/moderation',    require('./routes/moderation'));
 app.use('/health',            require('./routes/health'));
 
-//  Serve Frontend (SPA fallback) 
+// ─── Public profile & org pages ──────────────────────────────────────────────
+app.get('/profile/:username', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/profile.html'));
+});
+app.get('/org/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, '../public/org.html'));
+});
+
+// ─── Serve Frontend (SPA fallback) ────────────────────────────────────────────
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
 });
 
-//  Error Handler 
+// ─── Error Handler ────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(err.status || 500).json({
@@ -85,7 +93,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-//  Start Server 
+// ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`
@@ -97,3 +105,6 @@ app.listen(PORT, () => {
 });
 
 module.exports = app;
+
+// ─── Public profile and org pages ─────────────────────────────────────────────
+// These must come BEFORE the catch-all SPA fallback above
