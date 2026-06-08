@@ -9,9 +9,9 @@ async function connectDB() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log(`✅ Main DB connected: ${conn.connection.host}`);
+    console.log(` Main DB connected: ${conn.connection.host}`);
   } catch (err) {
-    console.error('❌ Main DB connection failed:', err.message);
+    console.error(' Main DB connection failed:', err.message);
     process.exit(1);
   }
 }
