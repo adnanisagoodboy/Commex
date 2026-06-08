@@ -110,7 +110,7 @@ let orgConfig = null;
 async function load() {
   const root = document.getElementById('root');
   try {
-  
+    // Load public embed config (no auth needed)
     const cfg = await apiFetch(`/api/embed/config/${slug}`);
     orgConfig = cfg.org;
     document.title = `${orgConfig.name} — Commex`;
@@ -191,7 +191,7 @@ async function loadComments() {
       list.innerHTML = `<div class="empty"><div class="empty-icon">🔒</div><div>Sign in to view organization activity</div></div>`;
       return;
     }
-    const data = await apiFetch(`/api/moderation/${slug}/page?pageUrl=__all__&page=${commentPage}&limit=15`);
+    const data = await apiFetch(`/api/moderation/${slug}/recent?page=${commentPage}&limit=15`);
     const comments = data.comments || [];
 
     if (commentPage === 1 && comments.length === 0) {

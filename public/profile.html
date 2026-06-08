@@ -143,6 +143,10 @@ async function load() {
           <div class="profile-name">${esc(u.displayName || u.username)}</div>
           <div class="profile-username">@${esc(u.username)}</div>
           ${u.bio ? `<div class="profile-bio">${esc(u.bio)}</div>` : ''}
+          ${data.rank ? `<div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:5px 12px;border-radius:20px;font-size:13px;font-weight:600;background:${data.rank.color}22;color:${data.rank.color};border:1px solid ${data.rank.color}44">
+            ${data.rank.emoji} ${data.rank.label}
+            ${data.progress < 100 && data.nextRank ? `<span style="font-size:11px;opacity:.7">· ${data.nextRank.min - (u.commentCount||0)} to ${data.nextRank.label}</span>` : ''}
+          </div>` : ''}
           <div class="profile-meta">
             <span class="profile-meta-item">💬 ${u.commentCount||0} comments</span>
             ${u.website ? `<span class="profile-meta-item">🔗 <a href="${esc(u.website)}" target="_blank" rel="noopener">${esc(u.website.replace(/^https?:\/\//,''))}</a></span>` : ''}

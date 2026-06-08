@@ -830,6 +830,20 @@
     <button class="nav-btn nav-btn-ghost" onclick="showAuthPage('login')" id="nav-login">Sign in</button>
     <button class="nav-btn nav-btn-primary" onclick="showAuthPage('register')" id="nav-register">Get started</button>
     <div class="nav-user" id="nav-user" style="display:none">
+      <div style="position:relative">
+        <button class="nav-btn nav-btn-ghost" id="nav-bell-btn" onclick="toggleNavNotifs()" style="padding:7px 10px;font-size:16px;position:relative">
+          🔔<span id="nav-notif-badge" style="display:none;position:absolute;top:4px;right:4px;background:#ef4444;color:#fff;font-size:9px;font-weight:700;border-radius:8px;min-width:15px;height:15px;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid var(--bg)"></span>
+        </button>
+        <div id="nav-notif-panel" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:340px;max-width:90vw;background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;z-index:9999;box-shadow:0 8px 32px #000000bb">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)">
+            <span style="font-size:14px;font-weight:600;color:var(--text)">Notifications</span>
+            <button class="btn btn-ghost btn-sm" onclick="markAllNotifsRead()">Mark all read</button>
+          </div>
+          <div id="nav-notif-list" style="max-height:360px;overflow-y:auto">
+            <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Loading...</div>
+          </div>
+        </div>
+      </div>
       <div class="nav-avatar" id="nav-avatar" onclick="showPage('dashboard')"></div>
       <span class="nav-username" id="nav-username"></span>
       <button class="nav-btn nav-btn-ghost" onclick="logout()">Sign out</button>
@@ -857,11 +871,25 @@
       </p>
       <div class="hero-actions">
         <button class="hero-btn hero-btn-primary" onclick="showAuthPage('register')">
-          Start for free
+          Get started free →
         </button>
         <button class="hero-btn hero-btn-outline" onclick="scrollToFeatures()">
-          See features
+          See how it works
         </button>
+      </div>
+      <div style="display:flex;gap:24px;justify-content:center;margin-top:28px;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#52525b">
+          <span style="color:#4ade80">✓</span> Own your MongoDB
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#52525b">
+          <span style="color:#4ade80">✓</span> 2-line embed
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#52525b">
+          <span style="color:#4ade80">✓</span> GIFs, reactions, threads
+        </div>
+        <div style="display:flex;align-items:center;gap:7px;font-size:13px;color:#52525b">
+          <span style="color:#4ade80">✓</span> Dark by default
+        </div>
       </div>
       <div class="hero-embed-preview">
         <div class="hero-embed-bar">
@@ -879,7 +907,7 @@
           &nbsp;&nbsp;&nbsp;&nbsp;<span class="ec-attr">pageUrl</span>: <span class="ec-val">window.location.href</span><br>
           &nbsp;&nbsp;};<br>
           <span class="ec-tag">&lt;/script&gt;</span><br>
-          <span class="ec-tag">&lt;script</span> <span class="ec-attr">src</span>=<span class="ec-val">"https://commex.anipub.xyz/embed/commex.js"</span> <span class="ec-attr">async</span><span class="ec-tag">&gt;&lt;/script&gt;</span>
+          <span class="ec-tag">&lt;script</span> <span class="ec-attr">src</span>=<span class="ec-val">"commex.app/embed/commex.js"</span> <span class="ec-attr">async</span><span class="ec-tag">&gt;&lt;/script&gt;</span>
         </div>
       </div>
     </div>
@@ -1087,10 +1115,12 @@
         <div style="padding: 24px 32px">
           <!-- Tabs -->
           <div style="display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px">
-            <button class="auth-tab active" id="org-tab-embed" onclick="showOrgTab('embed')">Embed</button>
-            <button class="auth-tab" id="org-tab-settings" onclick="showOrgTab('settings')">Settings</button>
-            <button class="auth-tab" id="org-tab-features" onclick="showOrgTab('features')">Features</button>
-            <button class="auth-tab" id="org-tab-danger" onclick="showOrgTab('danger')">Danger zone</button>
+            <button class="auth-tab active" id="org-tab-embed" onclick="showOrgTab('embed')"> Embed</button>
+            <button class="auth-tab" id="org-tab-settings" onclick="showOrgTab('settings')"> Settings</button>
+            <button class="auth-tab" id="org-tab-features" onclick="showOrgTab('features')"> Features</button>
+            <button class="auth-tab" id="org-tab-moderation" onclick="showOrgTab('moderation')"> Moderation</button>
+            <button class="auth-tab" id="org-tab-members" onclick="showOrgTab('members')"> Members</button>
+            <button class="auth-tab" id="org-tab-danger" onclick="showOrgTab('danger')">⚠ Danger</button>
           </div>
 
           <!-- Embed tab -->
@@ -1126,6 +1156,14 @@
                   <input type="text" class="form-input" id="org-edit-name">
                 </div>
                 <div class="form-group">
+                  <label class="form-label">Logo URL <span class="form-label-hint">(paste any image URL)</span></label>
+                  <div style="display:flex;gap:10px;align-items:center">
+                    <input type="text" class="form-input" id="org-edit-logo" placeholder="https://example.com/logo.png" oninput="previewEditLogo(this.value)">
+                    <div id="org-edit-logo-preview" style="width:44px;height:44px;border-radius:10px;background:var(--surface3);border:1px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:20px">🏢</div>
+                  </div>
+                  <div class="form-hint">Use any publicly hosted image. Square images work best.</div>
+                </div>
+                <div class="form-group">
                   <label class="form-label">Website URL</label>
                   <input type="text" class="form-input" id="org-edit-website" placeholder="https://yoursite.com">
                 </div>
@@ -1153,6 +1191,11 @@
                   <label class="form-label">Allowed domains <span class="form-label-hint">(one per line, leave blank to allow all)</span></label>
                   <textarea class="form-input mono" id="org-edit-domains" rows="3" placeholder="yoursite.com&#10;www.yoursite.com"></textarea>
                 </div>
+                <div class="form-group">
+                  <label class="form-label">Banned words <span class="form-label-hint">(one per line — comments containing these words will be blocked)</span></label>
+                  <textarea class="form-input mono" id="org-edit-words" rows="4" placeholder="spam&#10;badword&#10;unwanted"></textarea>
+                  <div class="form-hint">Case-insensitive. Partial matches are blocked too (e.g. "bad" blocks "badword").</div>
+                </div>
                 <button class="btn btn-primary" onclick="saveOrgSettings()">Save settings</button>
               </div>
             </div>
@@ -1163,6 +1206,103 @@
             <div class="card">
               <div class="card-header"><span class="card-title">Feature toggles</span></div>
               <div class="card-body" id="features-toggles"></div>
+            </div>
+          </div>
+
+          <!-- Moderation -->
+          <div id="org-section-moderation" style="display:none">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title"> Pending approval <span id="pending-count" class="badge badge-yellow" style="display:none"></span></span>
+                <button class="btn btn-ghost btn-sm" onclick="loadPendingComments()">Refresh</button>
+              </div>
+              <div id="pending-list">
+                <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Click refresh to load pending comments</div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title"> Flagged comments</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadFlaggedComments()">Refresh</button>
+              </div>
+              <div id="flagged-list">
+                <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Click refresh to load flagged comments</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"> Recent activity</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadRecentComments()">Refresh</button>
+              </div>
+              <div id="recent-comments-list">
+                <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Click refresh to load recent comments</div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Members tab -->
+          <div id="org-section-members" style="display:none">
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title"> Members & roles</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadOrgMembers()">Refresh</button>
+              </div>
+              <div id="members-list">
+                <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Loading members...</div>
+              </div>
+              <div style="padding:16px 20px;border-top:1px solid var(--border)">
+                <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px">➕ Add member by username</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input type="text" class="form-input" id="add-member-username" placeholder="username" style="flex:1;min-width:140px">
+                  <select class="form-input" id="add-member-role" style="width:130px">
+                    <option value="moderator">Moderator</option>
+                    <option value="admin">Admin</option>
+                    <option value="member">Member</option>
+                  </select>
+                  <button class="btn btn-primary btn-sm" onclick="addOrgMember()">Add member</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px">
+              <div class="card-header">
+                <span class="card-title"> Banned users</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadBannedUsers()">Refresh</button>
+              </div>
+              <div id="banned-users-list">
+                <div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">Loading banned users...</div>
+              </div>
+              <div style="padding:16px 20px;border-top:1px solid var(--border)">
+                <div style="font-size:13px;font-weight:600;color:var(--text-muted);margin-bottom:10px"> Ban a user</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <input type="text" class="form-input" id="ban-username" placeholder="username" style="flex:1;min-width:140px">
+                  <input type="text" class="form-input" id="ban-reason" placeholder="Reason (optional)" style="flex:2;min-width:160px">
+                  <button class="btn btn-danger btn-sm" onclick="banOrgUser()">Ban user</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-header">
+                <span class="card-title"> Role permissions reference</span>
+                <button class="btn btn-ghost btn-sm" onclick="loadPermissions()">Show table</button>
+              </div>
+              <div id="permissions-table" style="display:none">
+                <div style="overflow-x:auto;padding:4px">
+                  <table class="table" style="min-width:500px">
+                    <thead><tr>
+                      <th>Permission</th>
+                      <th style="text-align:center">Owner</th>
+                      <th style="text-align:center">Admin</th>
+                      <th style="text-align:center">Moderator</th>
+                      <th style="text-align:center">Member</th>
+                    </tr></thead>
+                    <tbody id="perm-rows"></tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -1245,6 +1385,13 @@
         <div class="form-hint">Must be unique across all organizations</div>
       </div>
       <div class="form-group">
+        <label class="form-label">Logo URL <span class="form-label-hint">(paste any image URL)</span></label>
+        <div style="display:flex;gap:10px;align-items:center">
+          <input type="text" class="form-input" id="new-org-logo" placeholder="https://example.com/logo.png" oninput="previewNewLogo(this.value)">
+          <div id="new-org-logo-preview" style="width:40px;height:40px;border-radius:8px;background:var(--surface3);border:1px solid var(--border2);overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:18px">🏢</div>
+        </div>
+      </div>
+      <div class="form-group">
         <label class="form-label">Website URL</label>
         <input type="text" class="form-input" id="new-org-website" placeholder="https://acmecorp.com">
       </div>
@@ -1270,7 +1417,7 @@
         Create organization
       </button>
     </div>
-    
+  </div>
 </div>
 
 <script>
@@ -1322,6 +1469,95 @@
   function scrollToFeatures() {
     showPage('home');
     setTimeout(() => document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' }), 50);
+  }
+
+  //  Dashboard notification bell ─
+  async function toggleNavNotifs() {
+    const panel = document.getElementById('nav-notif-panel');
+    if (!panel) return;
+    const isOpen = panel.style.display !== 'none';
+    if (isOpen) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+    await loadNavNotifs();
+
+    // close on outside click
+    setTimeout(() => {
+      document.addEventListener('click', function closeIt(e) {
+        if (!panel.contains(e.target) && e.target.id !== 'nav-bell-btn') {
+          panel.style.display = 'none';
+          document.removeEventListener('click', closeIt);
+        }
+      });
+    }, 50);
+  }
+
+  async function loadNavNotifs() {
+    const list = document.getElementById('nav-notif-list');
+    if (!list) return;
+    try {
+      const data = await apiFetch('/api/users/me/notifications');
+      const notifs = data.notifications || [];
+      const unread = data.unreadCount || 0;
+
+      // Update badge
+      const badge = document.getElementById('nav-notif-badge');
+      if (badge) {
+        if (unread > 0) {
+          badge.textContent = unread > 9 ? '9+' : unread;
+          badge.style.display = 'flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      if (notifs.length === 0) {
+        list.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">🔔 No notifications yet</div>';
+        return;
+      }
+
+      const icons = { reply: '↩', mention: '@', reaction: '❤️', pin: '📌' };
+      const labels = { reply: 'replied to your comment', mention: 'mentioned you', reaction: 'reacted to your comment', pin: 'pinned your comment' };
+
+      list.innerHTML = notifs.map(n => `
+        <div onclick="handleNavNotifClick('${n.pageUrl||''}')" style="padding:12px 16px;border-bottom:1px solid var(--border);cursor:pointer;display:flex;gap:10px;align-items:flex-start;background:${!n.isRead?'var(--accent-glow)':'transparent'};transition:background .1s" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='${!n.isRead?'var(--accent-glow)':'transparent'}'">
+          <span style="font-size:15px;flex-shrink:0">${icons[n.type]||'🔔'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:13px;color:var(--text-muted)">
+              <strong style="color:var(--text)">${escHtml(n.fromUserName||'Someone')}</strong>
+              ${labels[n.type]||'interacted with you'}
+              ${n.orgName ? `<span style="color:var(--text-dim);font-size:11px"> · ${escHtml(n.orgName)}</span>` : ''}
+            </div>
+            ${n.preview ? `<div style="font-size:11px;color:var(--text-dim);margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">"${escHtml(n.preview)}"</div>` : ''}
+            ${n.pageTitle ? `<div style="font-size:11px;color:var(--text-dim);margin-top:2px">on: ${escHtml(n.pageTitle)}</div>` : ''}
+            <div style="font-size:10px;color:var(--text-dim);margin-top:4px">${timeAgo(n.createdAt)}</div>
+          </div>
+          ${!n.isRead ? '<span style="width:7px;height:7px;border-radius:50%;background:var(--accent);flex-shrink:0;margin-top:4px"></span>' : ''}
+        </div>`).join('');
+    } catch(e) {
+      list.innerHTML = `<div style="padding:16px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function markAllNotifsRead() {
+    try {
+      // Mark read across all orgs by calling each org's notification endpoint
+      const orgsData = await apiFetch('/api/orgs/mine');
+      await Promise.allSettled((orgsData.orgs||[]).map(org =>
+        apiFetch(`/api/notifications/${org.slug}/read`, { method: 'PATCH', body: JSON.stringify({}) })
+      ));
+      const badge = document.getElementById('nav-notif-badge');
+      if (badge) badge.style.display = 'none';
+      await loadNavNotifs();
+      toast('All notifications marked as read', 'success');
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  function handleNavNotifClick(pageUrl) {
+    document.getElementById('nav-notif-panel').style.display = 'none';
+    if (pageUrl && pageUrl !== window.location.href) window.open(pageUrl, '_blank');
   }
 
   function updateNavUser() {
@@ -1513,7 +1749,7 @@
       currentOrg = data.org;
       
       document.getElementById('org-detail-name').textContent = currentOrg.name;
-      document.getElementById('org-detail-slug').textContent = `commex.anipub.xyz/embed/${currentOrg.slug}`;
+      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
       
       showDashSection('org-detail');
       showOrgTab('embed');
@@ -1523,13 +1759,15 @@
   }
 
   function showOrgTab(tab) {
-    ['embed','settings','features','danger'].forEach(t => {
+    ['embed','settings','features','moderation','members','danger'].forEach(t => {
       document.getElementById(`org-tab-${t}`).classList.toggle('active', t === tab);
       document.getElementById(`org-section-${t}`).style.display = t === tab ? '' : 'none';
     });
     if (tab === 'embed') renderEmbedTab();
     if (tab === 'settings') renderSettingsTab();
     if (tab === 'features') renderFeaturesTab();
+    if (tab === 'moderation') { loadPendingComments(); loadFlaggedComments(); loadRecentComments(); }
+    if (tab === 'members') { loadOrgMembers(); loadBannedUsers(); }
   }
 
   function renderEmbedTab() {
@@ -1551,11 +1789,14 @@
   function renderSettingsTab() {
     if (!currentOrg) return;
     document.getElementById('org-edit-name').value = currentOrg.name || '';
+    document.getElementById('org-edit-logo').value = currentOrg.logo || '';
     document.getElementById('org-edit-website').value = currentOrg.websiteUrl || '';
     document.getElementById('org-edit-description').value = currentOrg.description || '';
     document.getElementById('org-edit-domains').value = (currentOrg.allowedDomains || []).join('\n');
+    document.getElementById('org-edit-words').value = (currentOrg.bannedWords || []).join('\n');
     document.getElementById('org-color-input').value = currentOrg.accentColor || '#7c3aed';
     
+    previewEditLogo(currentOrg.logo || '');
     // Select current color swatch
     document.querySelectorAll('#org-section-settings .color-swatch').forEach(s => {
       s.classList.toggle('selected', s.dataset.color === currentOrg.accentColor);
@@ -1610,11 +1851,14 @@
     try {
       const updates = {
         name: document.getElementById('org-edit-name').value.trim(),
+        logo: document.getElementById('org-edit-logo').value.trim(),
         websiteUrl: document.getElementById('org-edit-website').value.trim(),
         description: document.getElementById('org-edit-description').value.trim(),
         accentColor: document.getElementById('org-color-input').value,
         allowedDomains: document.getElementById('org-edit-domains').value
           .split('\n').map(d => d.trim()).filter(Boolean),
+        bannedWords: document.getElementById('org-edit-words').value
+          .split('\n').map(w => w.trim().toLowerCase()).filter(Boolean),
       };
       const newDb = document.getElementById('org-edit-db').value.trim();
       if (newDb) updates.dbConnectionString = newDb;
@@ -1625,7 +1869,7 @@
       });
       currentOrg = data.org;
       // Update slug in URL if name changed
-      document.getElementById('org-detail-slug').textContent = `commex.anipub.xyz/embed/${currentOrg.slug}`;
+      document.getElementById('org-detail-slug').textContent = `commex.app/embed/${currentOrg.slug}`;
       document.getElementById('org-detail-name').textContent = currentOrg.name;
       await loadDashboard();
       toast('Settings saved', 'success');
@@ -1748,6 +1992,7 @@
         method: 'POST',
         body: JSON.stringify({
           name: document.getElementById('new-org-name').value.trim(),
+          logo: document.getElementById('new-org-logo').value.trim(),
           websiteUrl: document.getElementById('new-org-website').value.trim(),
           dbConnectionString: document.getElementById('new-org-db').value.trim(),
           accentColor: document.getElementById('new-org-color').value,
@@ -1762,7 +2007,8 @@
       showDashSection('org-detail');
 
       // Reset form
-      ['new-org-name','new-org-website','new-org-db'].forEach(id => document.getElementById(id).value = '');
+      ['new-org-name','new-org-logo','new-org-website','new-org-db'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('new-org-logo-preview').innerHTML = '🏢';
     } catch (e) {
       errEl.textContent = e.message;
       errEl.style.display = '';
@@ -1779,6 +2025,359 @@
     el.innerHTML = `<span style="color:${type==='success'?'#4ade80':type==='error'?'#ef4444':'#71717a'}">${icon}</span> ${msg}`;
     container.appendChild(el);
     setTimeout(() => el.remove(), 3500);
+  }
+
+  function previewNewLogo(url) {
+    const el = document.getElementById('new-org-logo-preview');
+    if (!el) return;
+    if (url && url.startsWith('http')) {
+      el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='🏢'">`;
+    } else {
+      el.innerHTML = '🏢';
+    }
+  }
+
+  function previewEditLogo(url) {
+    const el = document.getElementById('org-edit-logo-preview');
+    if (!el) return;
+    if (url && url.startsWith('http')) {
+      el.innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML='🏢'">`;
+    } else {
+      el.innerHTML = '🏢';
+    }
+  }
+
+  //  Pending approval queue 
+  async function loadPendingComments() {
+    const el = document.getElementById('pending-list');
+    const badge = document.getElementById('pending-count');
+    if (!el || !currentOrg) return;
+    el.innerHTML = '<div style="padding:14px;text-align:center;font-size:13px;color:var(--text-dim)">Loading...</div>';
+    try {
+      const data = await apiFetch(`/api/moderation/${currentOrg.slug}/pending`);
+      const comments = data.comments || [];
+
+      // Update badge
+      if (badge) {
+        if (comments.length > 0) {
+          badge.textContent = comments.length;
+          badge.style.display = 'inline-flex';
+        } else {
+          badge.style.display = 'none';
+        }
+      }
+
+      if (comments.length === 0) {
+        el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px"> No pending comments</div>';
+        return;
+      }
+
+      el.innerHTML = `<table class="table">
+        <thead><tr>
+          <th>Author</th><th>Comment</th><th>Page</th><th>Submitted</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${comments.map(c => `<tr style="background:var(--accent-glow)">
+            <td style="color:var(--text);font-weight:500">${escHtml(c.authorName)}</td>
+            <td style="max-width:220px">
+              <div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;color:var(--text-muted)">${escHtml(c.content.substring(0,100))}${c.content.length>100?'…':''}</div>
+              ${c.gifUrl ? '<div style="font-size:11px;color:var(--text-dim)">📎 GIF attached</div>' : ''}
+            </td>
+            <td style="max-width:120px;font-size:11px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">
+              ${c.pageTitle ? escHtml(c.pageTitle) : '—'}
+            </td>
+            <td style="font-size:12px;white-space:nowrap">${timeAgo(c.createdAt)}</td>
+            <td>
+              <div style="display:flex;gap:5px">
+                <button class="btn btn-primary btn-sm" onclick="approveComment('${c._id}','pending')">✓ Approve</button>
+                <button class="btn btn-danger btn-sm" onclick="rejectComment('${c._id}')">✗ Reject</button>
+              </div>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:14px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function rejectComment(commentId) {
+    if (!currentOrg || !confirm('Reject and remove this comment?')) return;
+    try {
+      await apiFetch(`/api/comments/${currentOrg.slug}/${commentId}/reject`, { method: 'PATCH' });
+      toast('Comment rejected', 'success');
+      loadPendingComments();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  // Override approveComment to handle both flagged and pending flows
+  async function approveComment(commentId, source) {
+    if (!currentOrg) return;
+    const endpoint = source === 'pending'
+      ? `/api/comments/${currentOrg.slug}/${commentId}/approve`
+      : `/api/moderation/${currentOrg.slug}/${commentId}/approve`;
+    try {
+      await apiFetch(endpoint, { method: 'PATCH' });
+      toast('Comment approved', 'success');
+      if (source === 'pending') loadPendingComments();
+      else loadFlaggedComments();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  //  Permissions table ─
+  async function loadPermissions() {
+    const table = document.getElementById('permissions-table');
+    const rows = document.getElementById('perm-rows');
+    if (!table || !rows || !currentOrg) return;
+
+    try {
+      const data = await apiFetch(`/api/moderation/${currentOrg.slug}/permissions`);
+      const perms = data.permissions || {};
+
+      // Collect all unique permissions
+      const allPerms = [...new Set(Object.values(perms).flat())].sort();
+      const roles = ['owner','admin','moderator','member'];
+
+      rows.innerHTML = allPerms.map(p => {
+        const label = p.replace(/_/g,' ');
+        return `<tr>
+          <td style="font-size:12px;color:var(--text-muted);font-family:monospace">${escHtml(label)}</td>
+          ${roles.map(r => `<td style="text-align:center">${(perms[r]||[]).includes(p)
+            ? '<span style="color:#4ade80;font-size:14px">✓</span>'
+            : '<span style="color:#2a2a2a;font-size:14px">—</span>'
+          }</td>`).join('')}
+        </tr>`;
+      }).join('');
+
+      table.style.display = 'block';
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  //  Members, roles & org-level banning ─
+
+  async function loadOrgMembers() {
+    const el = document.getElementById('members-list');
+    if (!el || !currentOrg) return;
+    el.innerHTML = '<div style="padding:14px;text-align:center;font-size:13px;color:var(--text-dim)">Loading...</div>';
+    try {
+      const data = await apiFetch(`/api/orgs/${currentOrg.slug}`);
+      const members = data.org?.members || [];
+      if (members.length === 0) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px">No members yet</div>';
+        return;
+      }
+      const roleBadge = r => ({
+        admin: '<span class="badge badge-purple">Admin</span>',
+        moderator: '<span class="badge badge-yellow">Mod</span>',
+        member: '<span class="badge" style="background:var(--surface3);color:var(--text-dim)">Member</span>',
+      }[r] || '');
+      el.innerHTML = `<table class="table">
+        <thead><tr><th>User</th><th>Role</th><th>Joined</th><th>Actions</th></tr></thead>
+        <tbody>${members.map(m => `<tr>
+          <td style="color:var(--text);font-weight:500">${escHtml(m.user?.username || m.user?._id || m.user || '—')}</td>
+          <td>${roleBadge(m.role)}</td>
+          <td style="font-size:12px">${m.joinedAt ? timeAgo(m.joinedAt) : '—'}</td>
+          <td style="display:flex;gap:5px;flex-wrap:wrap">
+            <select class="form-input" style="padding:3px 6px;font-size:11px;width:110px" id="role-sel-${m.user?._id||m.user}" onchange="changeRole('${m.user?._id||m.user}',this.value)">
+              <option value="member" ${m.role==='member'?'selected':''}>Member</option>
+              <option value="moderator" ${m.role==='moderator'?'selected':''}>Moderator</option>
+              <option value="admin" ${m.role==='admin'?'selected':''}>Admin</option>
+            </select>
+            <button class="btn btn-danger btn-sm" onclick="removeOrgMember('${m.user?._id||m.user}')">Remove</button>
+          </td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:14px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function addOrgMember() {
+    const username = document.getElementById('add-member-username')?.value?.trim();
+    const role = document.getElementById('add-member-role')?.value || 'moderator';
+    if (!username || !currentOrg) return;
+    try {
+      // Look up user ID by username first
+      const userData = await apiFetch(`/api/users/${username}`);
+      const userId = userData.user?._id;
+      if (!userId) throw new Error('User not found');
+      await apiFetch(`/api/moderation/${currentOrg.slug}/members`, {
+        method: 'POST',
+        body: JSON.stringify({ userId, role })
+      });
+      document.getElementById('add-member-username').value = '';
+      toast(`@${username} added as ${role}`, 'success');
+      loadOrgMembers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function changeRole(userId, role) {
+    if (!currentOrg) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/members`, {
+        method: 'POST',
+        body: JSON.stringify({ userId, role })
+      });
+      toast('Role updated', 'success');
+      loadOrgMembers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function removeOrgMember(userId) {
+    if (!currentOrg || !confirm('Remove this member from the org?')) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/members/${userId}`, { method: 'DELETE' });
+      toast('Member removed', 'success');
+      loadOrgMembers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function loadBannedUsers() {
+    const el = document.getElementById('banned-users-list');
+    if (!el || !currentOrg) return;
+    el.innerHTML = '<div style="padding:14px;text-align:center;font-size:13px;color:var(--text-dim)">Loading...</div>';
+    try {
+      const data = await apiFetch(`/api/moderation/${currentOrg.slug}/banned`);
+      const banned = data.bannedUsers || [];
+      if (banned.length === 0) {
+        el.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:13px"> No banned users</div>';
+        return;
+      }
+      el.innerHTML = `<table class="table">
+        <thead><tr><th>Username</th><th>Reason</th><th>Banned</th><th>Actions</th></tr></thead>
+        <tbody>${banned.map(b => `<tr>
+          <td style="color:var(--red);font-weight:500">@${escHtml(b.username)}</td>
+          <td style="color:var(--text-muted);font-size:12px">${escHtml(b.reason||'—')}</td>
+          <td style="font-size:12px">${timeAgo(b.bannedAt)}</td>
+          <td><button class="btn btn-ghost btn-sm" onclick="unbanOrgUser('${escHtml(b.username)}')">Unban</button></td>
+        </tr>`).join('')}</tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:14px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function banOrgUser() {
+    const username = document.getElementById('ban-username')?.value?.trim();
+    const reason = document.getElementById('ban-reason')?.value?.trim();
+    if (!username || !currentOrg) return;
+    if (!confirm(`Ban @${username} from ${currentOrg.name}? They won't be able to comment.`)) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/ban`, {
+        method: 'POST',
+        body: JSON.stringify({ username, reason })
+      });
+      document.getElementById('ban-username').value = '';
+      document.getElementById('ban-reason').value = '';
+      toast(`@${username} banned from ${currentOrg.name}`, 'success');
+      loadBannedUsers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function unbanOrgUser(username) {
+    if (!currentOrg || !confirm(`Unban @${username}?`)) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/ban/${username}`, { method: 'DELETE' });
+      toast(`@${username} unbanned`, 'success');
+      loadBannedUsers();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  //  Moderation functions 
+  async function loadFlaggedComments() {
+    const el = document.getElementById('flagged-list');
+    if (!el || !currentOrg) return;
+    el.innerHTML = '<div style="padding:16px;text-align:center"><div class="stat-value" style="font-size:13px">Loading...</div></div>';
+    try {
+      const data = await apiFetch(`/api/moderation/${currentOrg.slug}/flagged`);
+      const comments = data.comments || [];
+      if (comments.length === 0) {
+        el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px"> No flagged comments</div>';
+        return;
+      }
+      el.innerHTML = `<table class="table">
+        <thead><tr>
+          <th>Author</th><th>Comment</th><th>Flags</th><th>Date</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${comments.map(c => `<tr>
+            <td style="color:var(--text)">${escHtml(c.authorName)}</td>
+            <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.content.substring(0,80))}${c.content.length>80?'…':''}</td>
+            <td><span class="badge badge-red">⚑ ${c.flagCount}</span></td>
+            <td>${timeAgo(c.createdAt)}</td>
+            <td style="display:flex;gap:6px">
+              <button class="btn btn-ghost btn-sm" onclick="approveComment('${c._id}')">✓ Approve</button>
+              <button class="btn btn-danger btn-sm" onclick="spamComment('${c._id}')">Spam</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:16px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function loadRecentComments() {
+    const el = document.getElementById('recent-comments-list');
+    if (!el || !currentOrg) return;
+    el.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--text-dim)">Loading...</div>';
+    try {
+      const data = await apiFetch(`/api/moderation/${currentOrg.slug}/recent?limit=20`);
+      const comments = data.comments || [];
+      if (comments.length === 0) {
+        el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:13px">No comments yet</div>';
+        return;
+      }
+      el.innerHTML = `<table class="table">
+        <thead><tr><th>Author</th><th>Comment</th><th>Page</th><th>Date</th><th>Actions</th></tr></thead>
+        <tbody>
+          ${comments.map(c => `<tr>
+            <td style="color:var(--text)">${escHtml(c.authorName)}</td>
+            <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(c.content.substring(0,80))}${c.content.length>80?'…':''}</td>
+            <td style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">
+              ${c.pageTitle ? `<a href="${escHtml(c.pageUrl)}" target="_blank" style="color:var(--accent2);text-decoration:none">${escHtml(c.pageTitle)}</a>` : '—'}
+            </td>
+            <td>${timeAgo(c.createdAt)}</td>
+            <td>
+              <button class="btn btn-danger btn-sm" onclick="deleteCommentAdmin('${currentOrg.slug}','${c._id}')">Delete</button>
+            </td>
+          </tr>`).join('')}
+        </tbody>
+      </table>`;
+    } catch(e) {
+      el.innerHTML = `<div style="padding:16px;color:var(--red);font-size:13px">Error: ${e.message}</div>`;
+    }
+  }
+
+  async function approveComment(commentId) {
+    if (!currentOrg) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/${commentId}/approve`, { method: 'PATCH' });
+      toast('Comment approved — flags cleared', 'success');
+      loadFlaggedComments();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function spamComment(commentId) {
+    if (!currentOrg || !confirm('Mark as spam and remove?')) return;
+    try {
+      await apiFetch(`/api/moderation/${currentOrg.slug}/${commentId}/spam`, { method: 'PATCH' });
+      toast('Marked as spam and removed', 'success');
+      loadFlaggedComments();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  async function deleteCommentAdmin(orgSlug, commentId) {
+    if (!confirm('Delete this comment?')) return;
+    try {
+      await apiFetch(`/api/comments/${orgSlug}/${commentId}`, { method: 'DELETE' });
+      toast('Comment deleted', 'success');
+      loadRecentComments();
+    } catch(e) { toast(e.message, 'error'); }
+  }
+
+  function escHtml(s) {
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
   }
 
   function timeAgo(date) {

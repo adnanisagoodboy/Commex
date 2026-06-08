@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/auth');
 
-//GIF Provider priority chain 
+//  GIF Provider priority chain 
 // 1. Giphy      — free tier, 42 req/hour (needs GIPHY_API_KEY)
 // 2. Gfycat     — no key needed, but being sunset; kept as middle fallback
 // 3. Tenor      — legacy, kept if TENOR_API_KEY still works for existing users
@@ -14,8 +14,7 @@ const GIPHY_PUBLIC_KEY = 'dc6zaTOxFJmzC'; // Giphy's official public beta key
 async function searchGiphy(q, limit, apiKey) {
   const key = apiKey || GIPHY_PUBLIC_KEY;
   const url = `https://api.giphy.com/v1/gifs/search?api_key=${key}&q=${encodeURIComponent(q)}&limit=${limit}&rating=g&lang=en`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
-  console.log(res)
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
   if (!res.ok) throw new Error(`Giphy error ${res.status}`);
   const data = await res.json();
   return (data.data || []).map(g => ({
@@ -74,7 +73,7 @@ async function trendingTenor(limit, apiKey) {
   })).filter(g => g.url);
 }
 
-// ─ Search GIFs 
+//  Search GIFs 
 router.get('/search', requireAuth, async (req, res) => {
   const { q, limit = 20 } = req.query;
   if (!q) return res.status(400).json({ error: 'Search query required' });
@@ -111,7 +110,7 @@ router.get('/search', requireAuth, async (req, res) => {
   });
 });
 
-// ─ Trending GIFs 
+//  Trending GIFs 
 router.get('/trending', requireAuth, async (req, res) => {
   const { limit = 24 } = req.query;
   const lim = Math.min(parseInt(limit) || 24, 50);
@@ -140,7 +139,7 @@ router.get('/trending', requireAuth, async (req, res) => {
   res.json({ gifs: [], detail: errors });
 });
 
-// ─ Provider status (useful for dashboard debugging) ─
+//  Provider status (useful for dashboard debugging) 
 router.get('/status', requireAuth, async (req, res) => {
   const status = {
     giphy: {

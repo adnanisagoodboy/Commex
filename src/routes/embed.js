@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { Organization } = require('../models/mainSchemas');
 
-//  Get org config for embed 
+//  Get org config for embed widget 
 router.get('/config/:orgSlug', async (req, res) => {
   try {
     const org = await Organization.findOne({ slug: req.params.orgSlug, isActive: true })
@@ -10,21 +10,20 @@ router.get('/config/:orgSlug', async (req, res) => {
 
     if (!org) return res.status(404).json({ error: 'Organization not found' });
 
-    // Check domain restrictions
+    // Domain restriction check
     const origin = req.headers.origin || req.headers.referer;
     if (org.allowedDomains?.length > 0 && origin) {
       try {
         const originHost = new URL(origin).hostname;
-        const isAllowed = org.allowedDomains.some(domain => 
-          originHost === domain || originHost.endsWith(`.${domain}`)
+        const isAllowed = org.allowedDomains.some(d =>
+          originHost === d || originHost.endsWith(`.${d}`)
         );
-        if (!isAllowed) {
-          return res.status(403).json({ error: 'Domain not authorized' });
-        }
-      } catch (e) {
-        // Invalid origin header, allow anyway
-      }
+        if (!isAllowed) return res.status(403).json({ error: 'Domain not authorized' });
+      } catch (_) {}
     }
+
+    // Expose owner + member IDs so embed can show pin/flag to correct users
+    const memberIds = org.members.map(m => m.user.toString());
 
     res.json({
       org: {
@@ -37,6 +36,9 @@ router.get('/config/:orgSlug', async (req, res) => {
         features: org.features,
         customEmojis: org.customEmojis,
         websiteUrl: org.websiteUrl,
+        // These let the embed know who can moderate
+        ownerId: org.owner.toString(),
+        memberIds,
       },
       apiUrl: process.env.APP_URL || 'http://localhost:3000',
     });

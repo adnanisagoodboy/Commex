@@ -56,7 +56,7 @@ router.post('/register', [
   }
 });
 
-// ─── Login ───
+//  Login 
 router.post('/login', [
   body('login').trim().notEmpty().withMessage('Email or username required'),
   body('password').notEmpty().withMessage('Password required'),
@@ -108,7 +108,7 @@ router.post('/login', [
   }
 });
 
-// ─── Get current user ──
+//  Get current user 
 router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await User.findById(req.user._id)
@@ -121,7 +121,7 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
-// ─── Logout (client-side mainly, but good to have) ──
+//  Logout (client-side mainly, but good to have) 
 router.post('/logout', requireAuth, async (req, res) => {
   res.json({ message: 'Logged out successfully' });
 });

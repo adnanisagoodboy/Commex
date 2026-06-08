@@ -23,6 +23,13 @@ const commentSchema = new mongoose.Schema({
   isDeleted:    { type: Boolean, default: false },
   isEdited:     { type: Boolean, default: false },
   editedAt:     { type: Date, default: null },
+  // Approval system
+  status: { 
+    type: String, 
+    enum: ['approved', 'pending', 'rejected'], 
+    default: 'approved',
+    index: true,
+  },
   isPinned:     { type: Boolean, default: false },
   isSpam:       { type: Boolean, default: false },
   isFlagged:    { type: Boolean, default: false },

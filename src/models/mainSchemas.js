@@ -148,6 +148,13 @@ const orgSchema = new mongoose.Schema({
 
   // Moderation
   bannedWords: [{ type: String }],
+  bannedUsers: [{
+    userId:   { type: String, required: true },
+    username: { type: String, required: true },
+    reason:   { type: String, default: '' },
+    bannedAt: { type: Date, default: Date.now },
+    bannedBy: { type: String },
+  }],
   autoModeration: { type: Boolean, default: false },
 
   isActive: { type: Boolean, default: true },

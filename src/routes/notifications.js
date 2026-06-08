@@ -18,7 +18,28 @@ async function loadOrg(req, res, next) {
   }
 }
 
-//  Get notifications for current user 
+//  Mark notifications read in a specific org 
+// Called by the embed widget: PATCH /api/notifications/:orgSlug/read
+router.patch('/:orgSlug/read', requireAuth, loadOrg, async (req, res) => {
+  try {
+    const { Notification } = req.orgModels;
+    const userId = req.user._id.toString();
+    const { ids } = req.body; // array of IDs, or empty/absent = mark all
+
+    const filter = { userId };
+    if (ids && ids.length > 0) filter._id = { $in: ids };
+
+    const result = await Notification.updateMany(filter, { $set: { isRead: true } });
+    console.log(`[notif read] Marked ${result.modifiedCount} notifications read for user ${userId} in org ${req.params.orgSlug}`);
+
+    res.json({ message: 'Marked as read', modified: result.modifiedCount });
+  } catch (err) {
+    console.error('[notif read] Error:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+//  Get notifications for a specific org ─
 router.get('/:orgSlug', requireAuth, loadOrg, async (req, res) => {
   try {
     const { Notification } = req.orgModels;
@@ -29,29 +50,12 @@ router.get('/:orgSlug', requireAuth, loadOrg, async (req, res) => {
     const total = await Notification.countDocuments(filter);
     const notifications = await Notification.find(filter)
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
+      .skip((parseInt(page) - 1) * parseInt(limit))
       .limit(parseInt(limit))
       .lean();
 
     const unreadCount = await Notification.countDocuments({ userId: req.user._id.toString(), isRead: false });
-
     res.json({ notifications, total, unreadCount, page: parseInt(page) });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-//  Mark notifications as read 
-router.patch('/:orgSlug/read', requireAuth, loadOrg, async (req, res) => {
-  try {
-    const { Notification } = req.orgModels;
-    const { ids } = req.body; // array of notification IDs, or empty to mark all
-
-    const filter = { userId: req.user._id.toString() };
-    if (ids && ids.length > 0) filter._id = { $in: ids };
-
-    await Notification.updateMany(filter, { $set: { isRead: true } });
-    res.json({ message: 'Notifications marked as read' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

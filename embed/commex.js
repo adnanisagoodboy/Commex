@@ -37,6 +37,10 @@
     emojiPickerFor: null,
     draftText: '', draftReply: {},
     flagged: {},       // commentId → true if user flagged it
+    notifications: [],
+    userRank: null,     // current user's rank object
+    unreadCount: 0,
+    showNotifs: false,  // notification dropdown open
   };
 
   //  Persist auth ─
@@ -74,6 +78,7 @@
         catch(_) { S.token = null; S.user = null; clearAuth(); }
       }
       await loadComments(true);
+      if (S.user) { await loadNotifications(); await loadUserRank(); }
       mount(target);
     } catch(e) {
       target.innerHTML = `<div style="color:#ef4444;padding:20px;font-family:sans-serif;background:#0a0a0a;border-radius:12px">Commex: ${e.message}</div>`;
@@ -94,7 +99,36 @@
     S.loading = false;
   }
 
-  //  Mount / Rerender 
+  async function loadUserRank() {
+    try {
+      const d = await api('GET', '/api/users/me/ranks');
+      S.userRank = d.currentRank;
+      S.userNextRank = d.nextRank;
+      S.userRankProgress = d.progress;
+      S.userCommentCount = d.commentCount;
+    } catch(e) { S.userRank = null; }
+  }
+
+  async function loadNotifications() {
+    try {
+      const d = await api('GET', '/api/users/me/notifications');
+      S.notifications = d.notifications || [];
+      S.unreadCount = d.unreadCount || 0;
+    } catch(e) { S.notifications = []; S.unreadCount = 0; }
+  }
+
+  async function markNotifsRead(ids) {
+    try {
+      // Mark read in this org's DB (notifications are stored per-org)
+      await api('PATCH', `/api/notifications/${ORG_SLUG}/read`, { ids: ids || [] });
+      S.notifications.forEach(n => {
+        if (!ids || ids.length === 0 || ids.includes(String(n._id))) n.isRead = true;
+      });
+      S.unreadCount = S.notifications.filter(n => !n.isRead).length;
+    } catch(e) { console.warn('[Commex] markNotifsRead failed:', e.message); }
+  }
+
+  // ── Mount / Rerender ─────────────────────────────────────────────────────────
   function mount(el) { el.innerHTML = buildAll(); bind(el); }
 
   function rerender(el) {
@@ -226,6 +260,41 @@
 .cx-spin{display:inline-block;width:13px;height:13px;border:2px solid #1e1e1e;border-top-color:${a};border-radius:50%;animation:cxspin .6s linear infinite}
 @keyframes cxspin{to{transform:rotate(360deg)}}
 
+/* rank badge */
+.cx-rank{display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;padding:2px 6px;border-radius:10px;letter-spacing:.03em;vertical-align:middle}
+.cx-rank-progress{height:3px;border-radius:2px;background:#1a1a1a;overflow:hidden;margin-top:4px}
+.cx-rank-fill{height:100%;border-radius:2px;transition:width .3s}
+/* rank card in header */
+.cx-user-card{padding:10px 14px;border-bottom:1px solid #111;background:#0a0a0a;display:flex;align-items:center;gap:10px}
+.cx-rank-info{flex:1;min-width:0}
+.cx-rank-name{font-size:12px;font-weight:600;color:#e4e4e7}
+.cx-rank-sub{font-size:10px;color:#52525b;margin-top:1px}
+
+/* notification bell */
+.cx-bell{position:relative;background:none;border:none;cursor:pointer;padding:5px;color:#52525b;display:flex;align-items:center;transition:color .15s;border-radius:6px}
+.cx-bell:hover{color:#a1a1aa;background:#141414}
+.cx-bell-icon{font-size:16px;line-height:1}
+.cx-badge-dot{position:absolute;top:2px;right:2px;min-width:16px;height:16px;background:#ef4444;border-radius:8px;font-size:9px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;padding:0 3px;border:2px solid #080808}
+.cx-notif-panel{position:absolute;top:calc(100% + 8px);right:0;width:320px;max-width:90vw;background:#0d0d0d;border:1px solid #1e1e1e;border-radius:14px;overflow:hidden;z-index:9999;box-shadow:0 8px 32px #000000aa;animation:cxfadein .15s ease}
+@keyframes cxfadein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.cx-notif-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #141414}
+.cx-notif-title{font-size:13px;font-weight:600;color:#e4e4e7}
+.cx-notif-mark{background:none;border:none;font-size:11px;color:#52525b;cursor:pointer;font-family:inherit;padding:3px 7px;border-radius:5px;transition:all .15s}
+.cx-notif-mark:hover{background:#141414;color:#a1a1aa}
+.cx-notif-list{max-height:320px;overflow-y:auto}
+.cx-notif-item{padding:11px 14px;border-bottom:1px solid #0f0f0f;cursor:pointer;transition:background .1s;display:flex;gap:10px;align-items:flex-start}
+.cx-notif-item:hover{background:#111}
+.cx-notif-item.unread{background:#7c3aed08;border-left:3px solid #7c3aed}
+.cx-notif-item.unread:hover{background:#7c3aed12}
+.cx-notif-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.cx-notif-body{flex:1;min-width:0}
+.cx-notif-text{font-size:12px;color:#a1a1aa;line-height:1.5}
+.cx-notif-text strong{color:#e4e4e7;font-weight:600}
+.cx-notif-preview{font-size:11px;color:#3f3f46;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.cx-notif-time{font-size:10px;color:#2a2a2a;margin-top:3px}
+.cx-notif-empty{padding:24px;text-align:center;color:#3f3f46;font-size:12px}
+.cx-hd-right{position:relative;display:flex;align-items:center;gap:6px}
+
 /* footer */
 .cx-foot{text-align:center;padding:10px;font-size:10px;color:#1e1e1e}
 .cx-foot a{color:${a};text-decoration:none;opacity:.6}
@@ -248,14 +317,20 @@
   function buildHeader() {
     const org = S.orgConfig || {};
     const a = org.accentColor || '#7c3aed';
+    const notifPanel = S.showNotifs ? buildNotifPanel(a) : '';
     return `<div class="cx-hd">
   <div class="cx-hd-brand">
     <div class="cx-hd-logo">${org.logo ? `<img src="${org.logo}" alt="">` : 'cx'}</div>
     <span class="cx-hd-name">${org.name || 'Comments'}</span>
   </div>
   <span class="cx-hd-count">${S.totalComments} comment${S.totalComments !== 1 ? 's' : ''}</span>
-  <div class="cx-hd-user">
+  <div class="cx-hd-right">
     ${S.user ? `
+      <button class="cx-bell" id="cx-bell-btn" title="Notifications">
+        <span class="cx-bell-icon">🔔</span>
+        ${S.unreadCount > 0 ? `<span class="cx-badge-dot">${S.unreadCount > 9 ? '9+' : S.unreadCount}</span>` : ''}
+      </button>
+      ${notifPanel}
       <div class="cx-av" title="${esc(S.user.displayName || S.user.username)}">
         ${S.user.avatar ? `<img src="${esc(S.user.avatar)}" alt="">` : esc((S.user.displayName||S.user.username||'U')[0]).toUpperCase()}
       </div>
@@ -265,8 +340,58 @@
 </div>`;
   }
 
+  function buildNotifPanel(accent) {
+    const notifs = S.notifications;
+    const icons = { reply: '↩', mention: '@', reaction: '❤️', pin: '📌' };
+    const labels = { reply: 'replied to your comment', mention: 'mentioned you', reaction: 'reacted to your comment', pin: 'pinned your comment' };
+    return `<div class="cx-notif-panel" id="cx-notif-panel">
+  <div class="cx-notif-hd">
+    <span class="cx-notif-title">Notifications ${S.unreadCount > 0 ? `<span style="color:#ef4444;font-size:11px">(${S.unreadCount} new)</span>` : ''}</span>
+    ${notifs.length > 0 ? `<button class="cx-notif-mark" id="cx-mark-all-read">Mark all read</button>` : ''}
+  </div>
+  <div class="cx-notif-list">
+    ${notifs.length === 0
+      ? `<div class="cx-notif-empty">🔔 No notifications yet</div>`
+      : notifs.map(n => `
+        <div class="cx-notif-item ${!n.isRead ? 'unread' : ''}" data-notif-id="${n._id}" data-notif-page="${esc(n.pageUrl||'')}">
+          <span class="cx-notif-icon">${icons[n.type] || '🔔'}</span>
+          <div class="cx-notif-body">
+            <div class="cx-notif-text"><strong>${esc(n.fromUserName||'Someone')}</strong> ${labels[n.type]||'interacted with you'}</div>
+            ${n.preview ? `<div class="cx-notif-preview">"${esc(n.preview)}"</div>` : ''}
+            ${n.pageTitle ? `<div class="cx-notif-preview" style="color:#3f3f46">on: ${esc(n.pageTitle)}</div>` : ''}
+            <div class="cx-notif-time">${timeAgo(n.createdAt)}</div>
+          </div>
+        </div>`).join('')}
+  </div>
+</div>`;
+  }
+
   function buildMain() {
-    return buildSortBar() + buildCompose() + buildList() + `<div class="cx-foot">powered by <a href="${API_BASE}" target="_blank">commex</a></div>`;
+    return (S.user && S.userRank ? buildRankBar() : '') + buildSortBar() + buildCompose() + buildList() + `<div class="cx-foot">powered by <a href="${API_BASE}" target="_blank">commex</a></div>`;
+  }
+
+  function buildRankBar() {
+    const r = S.userRank;
+    const next = S.userNextRank;
+    const prog = S.userRankProgress || 0;
+    const a = (S.orgConfig?.accentColor) || '#7c3aed';
+    return `<div class="cx-user-card">
+  <div class="cx-av" style="width:26px;height:26px;flex-shrink:0">
+    ${S.user.avatar ? `<img src="${esc(S.user.avatar)}" alt="">` : (S.user.displayName||S.user.username||'U')[0].toUpperCase()}
+  </div>
+  <div class="cx-rank-info">
+    <div style="display:flex;align-items:center;gap:6px">
+      <span style="font-size:12px;font-weight:600;color:#e4e4e7">${esc(S.user.displayName||S.user.username)}</span>
+      <span class="cx-rank" style="background:${r.color}22;color:${r.color}">${r.emoji} ${r.label}</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
+      <div class="cx-rank-progress" style="flex:1;max-width:120px">
+        <div class="cx-rank-fill" style="width:${prog}%;background:${r.color}"></div>
+      </div>
+      <span style="font-size:10px;color:#3f3f46">${S.userCommentCount||0} comments${next ? ` · ${next.min - (S.userCommentCount||0)} to ${next.emoji} ${next.label}` : ' · Max rank!'}</span>
+    </div>
+  </div>
+</div>`;
   }
 
   function buildSortBar() {
@@ -280,7 +405,9 @@
   function buildCompose() {
     const org = S.orgConfig || {};
     const feat = org.features || {};
-    if (!S.user) return `<div class="cx-compose"><div style="text-align:center;padding:10px 0;color:#3f3f46;font-size:13px"><span style="cursor:pointer;color:${org.accentColor||'#7c3aed'}" id="cx-signin-link">Sign in</span> to join the conversation</div></div>`;
+    const allowAnon = org.features?.anonymousComments === true;
+    if (!S.user && !allowAnon) return `<div class="cx-compose"><div style="text-align:center;padding:10px 0;color:#3f3f46;font-size:13px"><span style="cursor:pointer;color:${org.accentColor||'#7c3aed'}" id="cx-signin-link">Sign in</span> to join the conversation</div></div>`;
+    if (!S.user && allowAnon) return buildAnonCompose();
     const u = S.user;
     return `<div class="cx-compose">
   <div class="cx-compose-row">
@@ -302,6 +429,26 @@
         </div>
       </div>
       ${S.gifOpen ? buildGifPanel() : ''}
+    </div>
+  </div>
+</div>`;
+  }
+
+  function buildAnonCompose() {
+    const org = S.orgConfig || {};
+    const a = org.accentColor || '#7c3aed';
+    return `<div class="cx-compose">
+  <div style="margin-bottom:10px;display:flex;gap:8px">
+    <input class="cx-fi" id="cx-anon-name" placeholder="Your name (optional)" style="flex:1;padding:8px 11px;font-size:13px">
+    <span style="font-size:11px;color:#3f3f46;align-self:center;white-space:nowrap">or <span style="cursor:pointer;color:${a}" id="cx-signin-link">sign in</span></span>
+  </div>
+  <div class="cx-wrap">
+    <textarea class="cx-ta" id="cx-main-ta" placeholder="Write a comment..." rows="3">${esc(S.draftText)}</textarea>
+    <div class="cx-bar">
+      <span class="cx-spacer"></span>
+      <button class="cx-btn cx-primary" id="cx-post" style="padding:5px 14px;font-size:12px" ${S.posting?'disabled':''}>
+        ${S.posting?'<span class="cx-spin"></span>':'Post'}
+      </button>
     </div>
   </div>
 </div>`;
@@ -330,8 +477,16 @@
   function buildComment(c, isReply) {
     const feat = (S.orgConfig||{}).features || {};
     const del = c.isDeleted;
-    const isOwn = S.user && (c.authorId === S.user.id || c.authorId === S.user._id);
-    const isAdmin = S.user && (S.user.role === 'admin' || S.user.role === 'superadmin');
+    const uid = S.user && (S.user._id || S.user.id);
+    const isOwn = S.user && c.authorId === uid;
+    // isAdmin = global superadmin OR this user owns/moderates this specific org
+    const isAdmin = S.user && (
+      S.user.role === 'superadmin' ||
+      (S.orgConfig && (
+        S.orgConfig.ownerId === uid ||
+        (S.orgConfig.memberIds || []).includes(uid)
+      ))
+    );
     const urx = S.userReactions[c._id];
     const rc = c.reactionCounts ? (c.reactionCounts instanceof Map ? Object.fromEntries(c.reactionCounts) : c.reactionCounts) : {};
     const pills = Object.entries(rc).filter(([,n])=>n>0).map(([t,n])=>`<button class="cx-pill ${urx===t?'mine':''}" data-rx="${t}" data-cid="${c._id}">${t} <span class="cx-pill-n">${n}</span></button>`).join('');
@@ -370,6 +525,10 @@
     <div class="cx-cb">
       <div class="cx-meta">
         <span class="cx-author">${esc(c.authorName)}</span>
+        ${c.authorBadge === 'owner'     ? `<span class="cx-badge cx-badge-admin" style="background:#fbbf2422;color:#fbbf24">Owner</span>` : ''}
+        ${c.authorBadge === 'admin'     ? `<span class="cx-badge cx-badge-admin">Admin</span>` : ''}
+        ${c.authorBadge === 'moderator' ? `<span class="cx-badge" style="background:#06b6d422;color:#06b6d4;font-size:10px;font-weight:600;padding:2px 5px;border-radius:4px;text-transform:uppercase;letter-spacing:.04em">Mod</span>` : ''}
+        ${c.authorRank ? `<span class="cx-rank" style="background:${c.authorRank.color}22;color:${c.authorRank.color}">${c.authorRank.emoji} ${c.authorRank.label}</span>` : ''}
         ${c.isPinned?'<span class="cx-badge cx-badge-pin">📌 Pinned</span>':''}
         <span class="cx-time">${timeAgo(c.createdAt)}</span>
         ${c.isEdited?'<span class="cx-edited">edited</span>':''}
@@ -430,9 +589,47 @@
 </div>`;
   }
 
-  //  Events ─
+  //  Events 
   function bind(el) {
     on(el,'#cx-signin',     ()=>{ S.showAuth=true; rerender(el); });
+
+    // notification bell
+    on(el,'#cx-bell-btn', async () => {
+      S.showNotifs = !S.showNotifs;
+      if (S.showNotifs) {
+        await loadNotifications();
+      }
+      rerender(el);
+    });
+    on(el,'#cx-mark-all-read', async () => {
+      await markNotifsRead([]);
+      rerender(el);
+    });
+    // clicking a notification — mark read and scroll to page if possible
+    el.querySelectorAll('[data-notif-id]').forEach(item => {
+      item.addEventListener('click', async () => {
+        await markNotifsRead([item.dataset.notifId]);
+        S.showNotifs = false;
+        rerender(el);
+        if (item.dataset.notifPage && item.dataset.notifPage !== PAGE_URL) {
+          window.open(item.dataset.notifPage, '_blank');
+        }
+      });
+    });
+    // close notif panel when clicking outside
+    if (S.showNotifs) {
+      setTimeout(() => {
+        document.addEventListener('click', function closePanel(e) {
+          const panel = el.querySelector('#cx-notif-panel');
+          const bell = el.querySelector('#cx-bell-btn');
+          if (panel && !panel.contains(e.target) && !bell?.contains(e.target)) {
+            S.showNotifs = false;
+            rerender(el);
+            document.removeEventListener('click', closePanel);
+          }
+        });
+      }, 50);
+    }
     on(el,'#cx-signin-link',()=>{ S.showAuth=true; rerender(el); });
     on(el,'#cx-logout',     ()=>{ S.user=null; S.token=null; clearAuth(); rerender(el); });
 
@@ -460,7 +657,13 @@
     on(el,'#cx-tb-link',   ()=> wrapLink(el));
 
     // gif
-    on(el,'#cx-tb-gif', ()=>{ S.gifOpen=!S.gifOpen; rerender(el); setTimeout(()=>{ const i=el.querySelector('#cx-gif-si'); if(i)i.focus(); },30); });
+    on(el,'#cx-tb-gif', ()=>{
+      S.gifOpen = !S.gifOpen;
+      // When reopening, if we had a selected gif already allow changing it
+      // gifResults are preserved in state so panel shows previous search
+      rerender(el);
+      setTimeout(()=>{ const i=el.querySelector('#cx-gif-si'); if(i){ i.focus(); i.select(); } },30);
+    });
     on(el,'#cx-rm-gif', ()=>{ S.selectedGif=null; rerender(el); });
 
     const gsi = el.querySelector('#cx-gif-si');
@@ -543,7 +746,8 @@
 
     // reactions
     el.querySelectorAll('[data-rx][data-cid]').forEach(b => b.addEventListener('click', async () => {
-      if (!S.user) { S.showAuth=true; rerender(el); return; }
+      const allowAnon = S.orgConfig?.features?.anonymousComments === true;
+    if (!S.user && !allowAnon) { S.showAuth=true; rerender(el); return; }
       try {
         const d = await api('POST', `/api/reactions/${ORG_SLUG}/${b.dataset.cid}`, { type: b.dataset.rx });
         const c = findC(b.dataset.cid);
@@ -581,7 +785,9 @@
       S.token = d.token; S.user = d.user;
       saveAuth(d.token, d.user);
       S.showAuth = false; S.authLoading = false;
-      await loadComments(true); rerender(el);
+      await loadComments(true);
+      await loadUserRank();
+      rerender(el);
       toast(`Welcome${S.authMode==='register'?' to Commex':' back'}, ${d.user.displayName||d.user.username}!`);
     } catch(e) {
       S.authError = e.message; S.authLoading = false; rerender(el);
@@ -593,22 +799,26 @@
     const ta = content !== undefined ? null : el.querySelector('#cx-main-ta');
     const text = content !== undefined ? content : (ta?.value || '');
     if (!text.trim() && !S.selectedGif) return;
-    if (!S.user) { S.showAuth=true; rerender(el); return; }
+    const allowAnon = S.orgConfig?.features?.anonymousComments === true;
+    if (!S.user && !allowAnon) { S.showAuth=true; rerender(el); return; }
 
     S.posting = true; rerender(el);
     try {
-      await api('POST', `/api/comments/${ORG_SLUG}`, {
+      const anonName = !S.user ? (el.querySelector('#cx-anon-name')?.value?.trim() || 'Anonymous') : undefined;
+      const d = await api('POST', `/api/comments/${ORG_SLUG}`, {
         pageUrl: PAGE_URL, pageTitle: PAGE_TITLE,
         content: text.trim(),
         parentId: parentId || undefined,
         gifUrl: S.selectedGif?.url || undefined,
+        anonName,
       });
+      const isPending = d.status === 'pending';
       S.selectedGif = null; S.replyingTo = null; S.gifOpen = false;
       S.draftText = ''; S.draftReply = {};
       S.page = 1;
       await loadComments(true);
       S.posting = false; rerender(el);
-      toast('Comment posted!');
+      toast(isPending ? '⏳ Comment submitted — awaiting moderator approval' : '✓ Comment posted!');
     } catch(e) {
       S.posting = false; rerender(el); toast(e.message, 1);
     }
